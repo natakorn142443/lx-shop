@@ -105,6 +105,87 @@ router.post('/login', async (req, res) => {
 });
 
 // ===================================
+// GET /google-client-id - ดึง Google Client ID
+// ===================================
+router.get('/google-client-id', (req, res) => {
+    const clientId = process.env.GOOGLE_CLIENT_ID || '1084368549726-sampleclientid12345.apps.googleusercontent.com';
+    res.json({ success: true, clientId });
+});
+
+// ===================================
+// POST /google-login - ล็อกอิน/สมัครสมาชิกด้วย Google OAuth
+// ===================================
+router.post('/google-login', async (req, res) => {
+    try {
+        const { credential } = req.body;
+        if (!credential) {
+            return res.status(400).json({ success: false, message: 'ไม่พบข้อมูล Google Credential' });
+        }
+
+        // เรียก API ของ Google เพื่อถอดรหัสและตรวจสอบ Token
+        const googleRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+        if (!googleRes.ok) {
+            return res.status(400).json({ success: false, message: 'Google Token ไม่ถูกต้องหรือหมดอายุ' });
+        }
+
+        const payload = await googleRes.json();
+        const email = payload.email;
+        const first_name = payload.given_name || 'Google';
+        const last_name = payload.family_name || 'User';
+
+        // เช็คว่ามีผู้ใช้อีเมลนี้ในระบบอยู่แล้วหรือไม่
+        let userResult = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+        let user;
+
+        if (userResult.rows.length === 0) {
+            const id = crypto.randomBytes(16).toString('hex').toUpperCase();
+            const randomPassword = crypto.randomBytes(24).toString('hex');
+            const password_hash = hashPassword(randomPassword);
+
+            await pool.query(
+                'INSERT INTO users (id, first_name, last_name, email, password_hash) VALUES ($1, $2, $3, $4, $5)',
+                [id, first_name, last_name, email, password_hash]
+            );
+
+            const newUserRes = await pool.query('SELECT * FROM users WHERE id = $1', [id]);
+            user = newUserRes.rows[0];
+            console.log(`🆕 สมัครสมาชิกด้วย Google อัตโนมัติสำเร็จ: ${email}`);
+        } else {
+            user = userResult.rows[0];
+            console.log(`🔑 ล็อกอินด้วย Google สำเร็จ: ${email}`);
+        }
+
+        const token = signToken({
+            id: user.id,
+            email: user.email,
+            role: user.role,
+            first_name: user.first_name,
+            last_name: user.last_name
+        });
+
+        res.header('x-auth-token', token);
+        res.json({
+            success: true,
+            message: 'เข้าสู่ระบบด้วย Google สำเร็จ!',
+            token,
+            data: {
+                id: user.id,
+                first_name: user.first_name,
+                last_name: user.last_name,
+                email: user.email,
+                role: user.role,
+                phone_number: user.phone_number,
+                points: user.points,
+                created_at: user.created_at
+            }
+        });
+    } catch (err) {
+        console.error('Google login error:', err.message);
+        res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการล็อกอินด้วย Google' });
+    }
+});
+
+// ===================================
 // GET /all - ดึงรายชื่อผู้ใช้ทั้งหมด (Admin Only)
 // ===================================
 router.get('/all', adminMiddleware, async (req, res) => {

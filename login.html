@@ -11,6 +11,7 @@
         tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B' } } } } }
     </script>
     <style>body { font-family: 'Prompt', sans-serif; } .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }</style>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
 
@@ -75,11 +76,70 @@
                     <span class="text-gamer-lightgray/60">ยังไม่มีบัญชี?</span>
                     <a href="/register.html" class="text-gamer-cyan hover:text-white font-semibold ml-1 transition-colors">สมัครสมาชิก</a>
                 </div>
+
+                <div class="relative flex py-4 items-center">
+                    <div class="flex-grow border-t border-gamer-teal/10"></div>
+                    <span class="flex-shrink mx-4 text-xs text-gamer-lightgray/40">หรือ</span>
+                    <div class="flex-grow border-t border-gamer-teal/20"></div>
+                </div>
+
+                <!-- Google Sign-In Button Container -->
+                <div class="flex justify-center">
+                    <div id="google-btn-container"></div>
+                </div>
             </form>
         </div>
     </section>
 
     <script>
+    // --- Google Login Initialization & Handling ---
+    window.onload = function () {
+        fetch('/api/users/google-client-id')
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && json.clientId) {
+                    google.accounts.id.initialize({
+                        client_id: json.clientId,
+                        callback: handleCredentialResponse
+                    });
+                    google.accounts.id.renderButton(
+                        document.getElementById("google-btn-container"),
+                        { theme: "filled_blue", size: "large", text: "signin_with", shape: "rectangular", width: "320" }
+                    );
+                }
+            }).catch(console.error);
+    };
+
+    async function handleCredentialResponse(response) {
+        const credential = response.credential;
+        const errorDiv = document.getElementById('error-msg');
+        errorDiv.classList.add('hidden');
+
+        try {
+            const res = await fetch('/api/users/google-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credential })
+            });
+            const json = await res.json();
+            if (json.success) {
+                localStorage.setItem('lx_token', json.token);
+                localStorage.setItem('lx_user', JSON.stringify(json.data));
+                if (json.data.role === 'admin') {
+                    window.location.href = '/admin.html';
+                } else {
+                    window.location.href = '/';
+                }
+            } else {
+                errorDiv.classList.remove('hidden');
+                document.getElementById('error-text').textContent = json.message;
+            }
+        } catch (err) {
+            errorDiv.classList.remove('hidden');
+            document.getElementById('error-text').textContent = 'เกิดข้อผิดพลาดในการล็อกอินด้วย Google';
+        }
+    }
+
     document.getElementById('login-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('email').value;
