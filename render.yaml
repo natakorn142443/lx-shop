@@ -13,10 +13,10 @@ services:
       - key: PORT
         value: 10000
       - key: DATABASE_URL
-        placeholder: "ใส่ Connection String ของ PostgreSQL (เช่น จาก Neon.tech)"
+        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: DISCORD_WEBHOOK_URL
-        placeholder: "ใส่ Discord Webhook URL (ถ้ามี)"
+        sync: false
       - key: GEMINI_API_KEY
-        placeholder: "ใส่ Gemini API Key (ถ้ามี)"
+        sync: false
