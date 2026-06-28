@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เปรียบเทียบสินค้า - LX Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B', green: '#2ecc71' } } } } }
+    </script>
+    <style>body { font-family: 'Prompt', sans-serif; } .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }</style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col transition-colors duration-300">
+
+    <!-- Nav -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50 transition-colors duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center gap-2 group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                </a>
+                <div class="hidden md:flex space-x-8">
+                    <a href="/index.html" class="text-gamer-lightgray hover:text-gamer-cyan font-bold transition-colors">หน้าแรก</a>
+                    <a href="/pc-builder.html" class="text-gamer-lightgray hover:text-gamer-cyan font-bold transition-colors">จัดสเปคคอม</a>
+                    <a href="/compare.html" class="text-gamer-cyan border-b-2 border-gamer-cyan pb-1 font-bold">เปรียบเทียบ</a>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button id="theme-toggle" class="text-gamer-lightgray hover:text-yellow-400 transition-colors text-xl">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <a href="/cart.html" class="text-gamer-lightgray hover:text-gamer-cyan transition-colors flex items-center gap-2">
+                        <div class="relative">
+                            <i class="fa-solid fa-cart-shopping text-xl"></i>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-gamer-cyan text-gamer-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        <div class="text-center mb-12">
+            <h1 class="font-gaming text-4xl font-bold text-white mb-4"><i class="fa-solid fa-code-compare text-gamer-cyan mr-3"></i>เปรียบเทียบสินค้า</h1>
+            <p class="text-gamer-lightgray/70 max-w-2xl mx-auto">เปรียบเทียบสเปค ราคา และรายละเอียดแบบหมัดต่อหมัด ช่วยให้คุณตัดสินใจได้ง่ายขึ้น</p>
+        </div>
+
+        <div id="compare-container" class="bg-gamer-gray/30 border border-gamer-teal/20 rounded-2xl p-6 overflow-x-auto hidden transition-colors duration-300">
+            <table class="w-full text-left min-w-[600px]">
+                <thead>
+                    <tr id="compare-header" class="border-b border-gamer-teal/20">
+                        <th class="p-4 w-1/4"></th>
+                        <!-- Product headers injected here -->
+                    </tr>
+                </thead>
+                <tbody id="compare-body" class="divide-y divide-gamer-teal/10">
+                    <!-- Data injected here -->
+                </tbody>
+            </table>
+        </div>
+
+        <div id="empty-state" class="text-center py-20 bg-gamer-gray/20 rounded-2xl border border-dashed border-gamer-teal/30">
+            <i class="fa-solid fa-scale-balanced text-6xl text-gamer-teal/50 mb-6"></i>
+            <h3 class="text-2xl font-bold text-white mb-2">ยังไม่มีสินค้าสำหรับเปรียบเทียบ</h3>
+            <p class="text-gamer-lightgray/70 mb-6">กรุณากดไอคอน <i class="fa-solid fa-code-compare text-gamer-cyan mx-1"></i> ที่สินค้า 1-2 ชิ้น เพื่อนำมาเปรียบเทียบกัน</p>
+            <a href="/index.html" class="inline-block bg-gamer-cyan/10 border border-gamer-cyan/50 text-gamer-cyan px-8 py-3 rounded-xl font-bold hover:bg-gamer-cyan hover:text-gamer-dark transition-all">
+                กลับไปเลือกสินค้า
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gamer-dark border-t border-gamer-teal/20 py-8 mt-auto transition-colors duration-300">
+        <div class="text-center text-gamer-lightgray/50 text-sm">
+            <p>&copy; 2026 LX Shop. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="/theme.js"></script>
+    <script>
+        const API_URL = '';
+        
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('lx_cart') || '[]');
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cart-count');
+            if (count > 0) { badge.textContent = count; badge.classList.remove('opacity-0'); }
+            else badge.classList.add('opacity-0');
+        }
+
+        function getCompareList() {
+            return JSON.parse(localStorage.getItem('lx_compare') || '[]');
+        }
+
+        function removeFromCompare(id) {
+            let list = getCompareList();
+            list = list.filter(pid => pid !== id);
+            localStorage.setItem('lx_compare', JSON.stringify(list));
+            loadCompareData();
+        }
+
+        async function loadCompareData() {
+            const list = getCompareList();
+            if (list.length === 0) {
+                document.getElementById('compare-container').classList.add('hidden');
+                document.getElementById('empty-state').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('compare-container').classList.remove('hidden');
+            document.getElementById('empty-state').classList.add('hidden');
+
+            try {
+                // Fetch products concurrently
+                const promises = list.map(id => fetch(`${API_URL}/api/products/${id}`).then(res => res.json()));
+                const results = await Promise.all(promises);
+                const products = results.map(r => r.data).filter(p => p);
+
+                if(products.length === 0) return;
+
+                const header = document.getElementById('compare-header');
+                const body = document.getElementById('compare-body');
+
+                // Header Render
+                let headerHtml = '<th class="p-4 w-1/5"></th>';
+                products.forEach(p => {
+                    headerHtml += `
+                        <th class="p-4 text-center w-[40%] border-l border-gamer-teal/10 relative">
+                            <button onclick="removeFromCompare('${p.id}')" class="absolute top-2 right-2 text-gamer-lightgray/50 hover:text-gamer-red transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                            <img src="${p.image_url}" class="h-40 object-contain mx-auto mb-4 bg-white/5 rounded-lg p-2">
+                            <a href="/product.html?id=${p.id}" class="text-white hover:text-gamer-cyan transition-colors text-lg line-clamp-2">${p.name}</a>
+                        </th>
+                    `;
+                });
+                if(products.length < 2) {
+                    headerHtml += `
+                        <th class="p-4 text-center w-[40%] border-l border-gamer-teal/10">
+                            <a href="/index.html" class="flex flex-col items-center justify-center h-full border-2 border-dashed border-gamer-teal/30 rounded-lg p-8 text-gamer-lightgray/50 hover:text-gamer-cyan hover:border-gamer-cyan transition-all">
+                                <i class="fa-solid fa-plus text-3xl mb-2"></i>
+                                <span>เพิ่มสินค้ามาเปรียบเทียบ</span>
+                            </a>
+                        </th>
+                    `;
+                }
+                header.innerHTML = headerHtml;
+
+                // Body Render
+                const features = [
+                    { label: 'หมวดหมู่', key: 'category_name' },
+                    { label: 'ราคา', key: 'price', format: (p) => p.discount_price ? `<span class="line-through text-xs text-gamer-lightgray/50 block">฿${Number(p.price).toLocaleString()}</span><span class="text-gamer-cyan font-bold text-xl">฿${Number(p.discount_price).toLocaleString()}</span>` : `<span class="text-white font-bold text-xl">฿${Number(p.price).toLocaleString()}</span>` },
+                    { label: 'สภาพ', key: 'condition_level', format: (p) => `<span class="bg-gamer-dark px-2 py-1 rounded text-xs font-bold border border-gamer-teal/30">${p.condition_level}</span>` },
+                    { label: 'การรับประกัน', key: 'warranty_status' },
+                    { label: 'จำนวนคงเหลือ', key: 'stock_quantity', format: (p) => p.stock_quantity > 0 ? `<span class="text-gamer-green font-bold">${p.stock_quantity} ชิ้น</span>` : `<span class="text-gamer-red font-bold">สินค้าหมด</span>` },
+                    { label: 'รายละเอียด', key: 'description', format: (p) => `<p class="text-sm whitespace-pre-line text-gamer-lightgray/80">${p.description || '-'}</p>` }
+                ];
+
+                let bodyHtml = '';
+                features.forEach(f => {
+                    bodyHtml += `<tr><td class="p-4 font-bold text-white border-r border-gamer-teal/10 bg-black/10">${f.label}</td>`;
+                    products.forEach(p => {
+                        const val = f.format ? f.format(p) : (p[f.key] || '-');
+                        bodyHtml += `<td class="p-4 align-top">${val}</td>`;
+                    });
+                    if(products.length < 2) bodyHtml += `<td class="p-4"></td>`;
+                    bodyHtml += `</tr>`;
+                });
+
+                bodyHtml += `
+                    <tr><td class="p-4 bg-black/10"></td>
+                    ${products.map(p => `
+                        <td class="p-4 text-center border-l border-gamer-teal/10">
+                            <button onclick='addToCart(${JSON.stringify({ id: p.id, name: p.name, price: p.discount_price || p.price, image_url: p.image_url })})' class="w-full bg-gamer-cyan text-gamer-dark font-bold py-2 rounded-lg hover:bg-white transition-all disabled:opacity-50" ${p.stock_quantity <= 0 ? 'disabled' : ''}>
+                                <i class="fa-solid fa-cart-plus mr-2"></i> ${p.stock_quantity > 0 ? 'เพิ่มลงตะกร้า' : 'สินค้าหมด'}
+                            </button>
+                        </td>
+                    `).join('')}
+                    ${products.length < 2 ? '<td></td>' : ''}
+                    </tr>
+                `;
+
+                body.innerHTML = bodyHtml;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function addToCart(item) {
+            const cart = JSON.parse(localStorage.getItem('lx_cart') || '[]');
+            const existing = cart.find(i => i.id === item.id);
+            if (existing) existing.quantity += 1;
+            else cart.push({ ...item, quantity: 1 });
+            localStorage.setItem('lx_cart', JSON.stringify(cart));
+            updateCartCount();
+            alert('เพิ่มลงตะกร้าแล้ว');
+        }
+
+        updateCartCount();
+        loadCompareData();
+    </script>
+<script src="/mobile-nav.js"></script>
+<script src="/audio.js"></script>
+</body>
+</html>

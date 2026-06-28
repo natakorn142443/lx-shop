@@ -1,0 +1,15 @@
+# node_modules
+node_modules/
+backend/node_modules/
+
+# SQLite database
+backend/database.sqlite
+
+# Local Environment files
+backend/.env
+.env
+
+# Uploads (Render has ephemeral disk, upload files shouldn't be committed to Git)
+uploads/*
+!uploads/.gitkeep
+backend/uploads/*

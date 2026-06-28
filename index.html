@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LX Shop - สินค้าไอทีและเกมมิ่งเกียร์มือสอง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        gamer: {
+                            dark: '#0B0C10',
+                            gray: '#1F2833',
+                            lightgray: '#C5C6C7',
+                            cyan: '#66FCF1',
+                            teal: '#45A29E',
+                            red: '#FF4B4B'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                        gaming: ['Prompt', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'Prompt', sans-serif; }
+        .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0B0C10; }
+        ::-webkit-scrollbar-thumb { background: #45A29E; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #66FCF1; }
+    </style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex-shrink-0 flex items-center gap-2 cursor-pointer group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                </a>
+                
+                <!-- Nav Links -->
+                <div class="hidden lg:flex items-center gap-4 ml-6 text-xs font-bold text-gamer-lightgray uppercase tracking-wider">
+                    <a href="/pc-builder.html" class="hover:text-gamer-cyan transition-colors">จัดสเปคคอม</a>
+                    <a href="/market.html" class="hover:text-gamer-cyan transition-colors">ตลาดฝากขาย C2C</a>
+                </div>
+                <div class="flex-1 max-w-2xl mx-8 hidden md:block">
+                    <div class="relative group">
+                        <input id="search-input" type="text" placeholder="ค้นหา RTX 4090, Ryzen 9, B650..." autocomplete="off"
+                            class="w-full bg-gamer-dark text-white border border-gamer-teal/40 rounded-full py-2.5 pl-5 pr-12 focus:outline-none focus:border-gamer-cyan focus:ring-1 focus:ring-gamer-cyan focus:shadow-[0_0_15px_rgba(102,252,241,0.2)] transition-all">
+                        <button onclick="searchProducts()" class="absolute right-4 top-3 text-gamer-lightgray group-focus-within:text-gamer-cyan hover:text-gamer-cyan transition-colors">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                        <!-- Autocomplete Dropdown -->
+                        <div id="search-dropdown" class="absolute w-full mt-2 bg-[#0d121a] border border-gamer-teal/30 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] overflow-hidden z-50 hidden max-h-[300px] overflow-y-auto">
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <button class="theme-toggle text-gamer-lightgray hover:text-yellow-400 transition-colors text-xl" title="สลับโหมดหน้าจอ">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <a href="/login.html" class="hidden sm:flex text-gamer-lightgray hover:text-gamer-cyan transition-colors items-center gap-2 text-sm font-medium">
+                        <i class="fa-regular fa-user text-xl"></i>
+                        <span id="user-name">เข้าสู่ระบบ</span>
+                    </a>
+                    <a href="/cart.html" class="relative text-gamer-lightgray hover:text-gamer-cyan transition-colors group">
+                        <i class="fa-solid fa-cart-shopping text-2xl group-hover:scale-110 transition-transform"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-gamer-red text-white text-xs font-bold px-1.5 py-0.5 rounded-full border-2 border-gamer-gray">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative bg-gamer-dark overflow-hidden flex-grow-0 min-h-[500px]">
+        <div id="particles-js" class="absolute inset-0 z-0"></div>
+        <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1587202372634-32705e3bf49c?q=80&w=2000&auto=format&fit=crop')] bg-cover bg-center opacity-10"></div>
+        <div class="absolute inset-0 bg-gradient-to-r from-gamer-dark via-gamer-dark/80 to-transparent pointer-events-none z-0"></div>
+        <div class="absolute inset-0 bg-gradient-to-t from-gamer-dark to-transparent pointer-events-none z-0"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-20 lg:py-32">
+            <div class="max-w-2xl">
+                <div class="inline-flex items-center gap-2 px-3 py-1 mb-6 rounded-full bg-gamer-teal/10 border border-gamer-cyan/50 text-gamer-cyan text-sm font-semibold tracking-wide shadow-[0_0_10px_rgba(102,252,241,0.2)]">
+                    <i class="fa-solid fa-bolt text-yellow-400"></i> สินค้ามือสองคุณภาพพรีเมียม
+                </div>
+                <h1 class="font-gaming text-5xl sm:text-6xl md:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-lg">
+                    อัปเกรด <br>
+                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-gamer-cyan via-blue-400 to-purple-500 animate-pulse">Battle Station ของคุณ</span>
+                </h1>
+                <p class="text-lg md:text-xl text-gamer-lightgray mb-10 leading-relaxed max-w-xl">
+                    ฮาร์ดแวร์มือสองประสิทธิภาพสูงในราคาสุดคุ้ม ผ่านการทดสอบอย่างเข้มงวด ทำความสะอาดหมดจด และรับประกันคุณภาพ 30 วัน
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <a href="/pc-builder.html" class="bg-gamer-cyan text-gamer-dark font-bold py-3.5 px-8 rounded-lg hover:bg-white transition-all transform hover:-translate-y-1 hover:shadow-[0_0_20px_rgba(102,252,241,0.6)] tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-tools"></i> จัดสเปคคอมพิวเตอร์
+                    </a>
+                    <a href="#products" class="bg-gamer-gray/50 backdrop-blur-sm border border-gamer-cyan/50 text-gamer-cyan font-bold py-3.5 px-8 rounded-lg hover:bg-gamer-cyan/10 transition-all tracking-wider flex items-center gap-2">
+                        ช้อปเลย <i class="fa-solid fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Dynamic Banners Section -->
+    <section id="dynamic-banners-section" class="hidden relative w-full overflow-hidden bg-gamer-dark">
+        <div id="banner-slider" class="flex transition-transform duration-500 ease-in-out h-[300px] sm:h-[400px] md:h-[500px]">
+            <!-- Banners will be injected here -->
+        </div>
+        <button onclick="prevBanner()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full hover:bg-gamer-cyan hover:text-gamer-dark flex items-center justify-center transition-all z-10"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="nextBanner()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full hover:bg-gamer-cyan hover:text-gamer-dark flex items-center justify-center transition-all z-10"><i class="fa-solid fa-chevron-right"></i></button>
+        <div id="banner-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <!-- Dots will be injected here -->
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="py-10 border-y border-gamer-teal/20 bg-gamer-gray/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-center font-gaming text-xl text-gamer-lightgray mb-6 tracking-widest font-semibold">เลือกตามหมวดหมู่</h3>
+            <div id="categories-container" class="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
+                <!-- หมวดหมู่จะถูกโหลดจาก API -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Flash Sale Section -->
+    <section id="flash-sale-section" class="py-12 bg-gradient-to-r from-gamer-red/20 to-orange-500/10 border-b border-gamer-red/20 hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid fa-bolt text-4xl text-yellow-400 animate-pulse"></i>
+                    <div>
+                        <h2 class="font-gaming text-3xl md:text-4xl font-bold text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,75,75,0.8)]">FLASH SALE</h2>
+                        <p class="text-gamer-lightgray text-sm mt-1">ดีลเดือด ลดจัดหนัก มีเวลาจำกัด!</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-gamer-dark/80 px-4 py-2 rounded-xl border border-gamer-red/50">
+                    <span class="text-gamer-lightgray text-sm">สิ้นสุดใน:</span>
+                    <div class="font-gaming text-xl font-bold text-yellow-400 flex gap-2" id="countdown-timer">
+                        <span id="cd-hours">00</span>:<span id="cd-minutes">00</span>:<span id="cd-seconds">00</span>
+                    </div>
+                </div>
+            </div>
+            <div id="flash-sale-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Flash sale products -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="products" class="py-20 flex-grow relative">
+        <div class="absolute top-40 right-0 w-96 h-96 bg-gamer-cyan/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-40 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gamer-teal/20 pb-4 gap-4">
+                <div>
+                    <h2 class="font-gaming text-3xl md:text-4xl font-bold text-white flex items-center gap-3 drop-shadow-md">
+                        <i class="fa-solid fa-fire text-gamer-red animate-pulse"></i> <span id="section-title">สินค้าแนะนำ</span>
+                    </h2>
+                    <p class="text-gamer-teal mt-2 font-medium">ประสิทธิภาพระดับท็อปในราคาที่คุ้มกว่า ห้ามพลาด!</p>
+                </div>
+                <!-- Advanced Filters -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto" id="advanced-filters">
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter-min-price" placeholder="ราคาต่ำสุด" class="w-24 bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none" min="0">
+                        <span class="text-gamer-lightgray">-</span>
+                        <input type="number" id="filter-max-price" placeholder="ราคาสูงสุด" class="w-24 bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none" min="0">
+                    </div>
+                    <select id="filter-condition" onchange="loadProducts(currentCategory)" class="bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none">
+                        <option value="all">สภาพทั้งหมด</option>
+                        <option value="สภาพนางฟ้า">สภาพนางฟ้า</option>
+                        <option value="สภาพ 99%">สภาพ 99%</option>
+                        <option value="สภาพ 95%">สภาพ 95%</option>
+                        <option value="ไม่มีกล่อง">ไม่มีกล่อง</option>
+                    </select>
+                    <select id="filter-sort" onchange="loadProducts(currentCategory)" class="bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none">
+                        <option value="default">เรียงลำดับปกติ</option>
+                        <option value="price_asc">ราคา: ต่ำ - สูง</option>
+                        <option value="price_desc">ราคา: สูง - ต่ำ</option>
+                    </select>
+                    <button onclick="loadProducts(currentCategory)" class="bg-gamer-teal/20 text-gamer-teal border border-gamer-teal/50 hover:bg-gamer-teal hover:text-gamer-dark px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                        <i class="fa-solid fa-filter"></i> กรอง
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Grid (จะถูกสร้างจาก JavaScript) -->
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                <!-- Loading -->
+                <div class="col-span-full text-center py-20">
+                    <i class="fa-solid fa-spinner fa-spin text-gamer-cyan text-4xl mb-4"></i>
+                    <p class="text-gamer-lightgray">กำลังโหลดสินค้า...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#050608] border-t border-gamer-teal/20 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-microchip text-gamer-cyan text-2xl"></i>
+                <span class="font-gaming text-2xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+            </div>
+            <p class="text-gamer-lightgray/50 text-sm mb-6 text-center max-w-md">
+                ตลาดซื้อขายสินค้าไอทีมือสองระดับพรีเมียมและอุปกรณ์เกมมิ่งที่คุณไว้วางใจได้
+            </p>
+            <div class="flex gap-4 mb-8">
+                <a href="#" class="w-10 h-10 rounded-full bg-gamer-gray flex items-center justify-center text-gamer-lightgray hover:bg-gamer-cyan hover:text-gamer-dark transition-colors"><i class="fa-brands fa-discord"></i></a>
+                <a href="#" class="w-10 h-10 rounded-full bg-gamer-gray flex items-center justify-center text-gamer-lightgray hover:bg-gamer-cyan hover:text-gamer-dark transition-colors"><i class="fa-brands fa-twitter"></i></a>
+                <a href="#" class="w-10 h-10 rounded-full bg-gamer-gray flex items-center justify-center text-gamer-lightgray hover:bg-gamer-cyan hover:text-gamer-dark transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+            </div>
+            <p class="text-gamer-lightgray/40 text-xs">&copy; 2026 LX Shop. สงวนลิขสิทธิ์ทั้งหมด</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gamer-cyan text-gamer-dark font-bold px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(102,252,241,0.5)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-check-circle"></i>
+        <span id="toast-msg">เพิ่มลงตะกร้าแล้ว!</span>
+    </div>
+
+    <!-- Live Chat Widget -->
+    <div id="chat-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+        <!-- Chat Box -->
+        <div id="chat-box" class="bg-gamer-dark border border-gamer-cyan/50 rounded-2xl w-80 mb-4 shadow-[0_0_30px_rgba(102,252,241,0.2)] overflow-hidden transition-all duration-300 transform origin-bottom-right scale-0 opacity-0">
+            <div class="bg-gamer-gray p-4 border-b border-gamer-cyan/30 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 bg-gamer-cyan rounded-full flex items-center justify-center text-gamer-dark"><i id="chat-header-icon" class="fa-solid fa-headset"></i></div>
+                    <div>
+                        <h4 id="chat-header-title" class="text-white font-bold text-sm">LX Support</h4>
+                        <p id="chat-header-status" class="text-gamer-green text-[10px]"><i class="fa-solid fa-circle text-[8px]"></i> Online</p>
+                    </div>
+                </div>
+                <button onclick="toggleChat()" class="text-gamer-lightgray hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <!-- Chat Mode Selector -->
+            <div class="bg-[#0B0C10]/95 border-b border-gamer-teal/10 px-3 py-2 flex justify-around text-xs gap-2">
+                <button onclick="switchChatMode('admin')" id="btn-chat-admin" class="flex-1 text-center py-1.5 rounded-lg font-bold bg-gamer-cyan text-gamer-dark transition-all">
+                    💬 เจ้าหน้าที่
+                </button>
+                <button onclick="switchChatMode('ai')" id="btn-chat-ai" class="flex-1 text-center py-1.5 rounded-lg font-bold text-gamer-lightgray hover:text-white transition-all bg-gamer-gray">
+                    🤖 ผู้ช่วย AI (24h)
+                </button>
+            </div>
+            <div id="chat-messages" class="h-64 p-4 overflow-y-auto flex flex-col gap-3 bg-[#0B0C10]/90">
+                <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20">
+                    สวัสดีครับ 🙏 LX Shop ยินดีให้บริการครับ สนใจให้แอดมินแนะนำสินค้า จัดสเปค หรือสอบถามข้อมูลเพิ่มเติม พิมพ์ทิ้งไว้ได้เลยครับ!
+                </div>
+            </div>
+            <div class="p-3 bg-gamer-gray border-t border-gamer-teal/20 flex gap-2">
+                <input type="text" id="chat-input" placeholder="พิมพ์ข้อความ..." class="flex-1 bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gamer-cyan" onkeydown="if(event.key === 'Enter') { event.preventDefault(); sendChatMessage(); }">
+                <button onclick="sendChatMessage()" class="bg-gamer-cyan text-gamer-dark w-10 rounded-lg flex items-center justify-center hover:bg-white transition-colors"><i class="fa-solid fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <!-- Chat Button -->
+        <button id="chat-btn" onclick="toggleChat()" class="w-14 h-14 bg-gamer-cyan text-gamer-dark rounded-full text-2xl flex items-center justify-center shadow-[0_0_20px_rgba(102,252,241,0.4)] hover:scale-110 transition-transform relative">
+            <i class="fa-solid fa-comment-dots"></i>
+            <span class="absolute top-0 right-0 w-4 h-4 bg-gamer-red border-2 border-gamer-dark rounded-full"></span>
+        </button>
+    </div>
+
+    <script>
+    // ===================================
+    // JavaScript - เชื่อมหน้าเว็บกับ Backend API
+    // ===================================
+
+    const API_URL = '';
+    let user = null;
+    try {
+        const userStr = localStorage.getItem('lx_user');
+        if (userStr && userStr !== 'undefined') user = JSON.parse(userStr);
+    } catch(e) { localStorage.removeItem('lx_user'); }
+
+    // Update User UI
+    if (user) {
+        const userNameSpan = document.getElementById('user-name');
+        if (userNameSpan) {
+            userNameSpan.textContent = user.first_name || 'ผู้ใช้';
+            const loginLink = userNameSpan.closest('a');
+            if (loginLink) {
+                loginLink.href = '/profile.html';
+                loginLink.insertAdjacentHTML('afterend', `
+                    <button onclick="logout()" class="hidden sm:flex text-gamer-red hover:text-white transition-colors items-center gap-2 text-sm font-medium ml-4 border border-gamer-red/30 px-3 py-1 rounded-lg hover:bg-gamer-red hover:border-gamer-red">
+                        <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                    </button>
+                `);
+            }
+        }
+    }
+
+    window.logout = function() {
+        localStorage.removeItem('lx_user');
+        window.location.reload();
+    };
+
+    // --- ตะกร้าและเปรียบเทียบ ---
+    function getCart() { 
+        try {
+            const str = localStorage.getItem('lx_cart');
+            return (str && str !== 'undefined') ? JSON.parse(str) : [];
+        } catch(e) {
+            localStorage.removeItem('lx_cart');
+            return [];
+        }
+    }
+    function saveCart(cart) {
+        localStorage.setItem('lx_cart', JSON.stringify(cart));
+        updateCartCount();
+    }
+    
+    function addToCompare(id) {
+        let list = JSON.parse(localStorage.getItem('lx_compare') || '[]');
+        if (list.includes(id)) {
+            showToast('สินค้านี้อยู่ในรายการเปรียบเทียบแล้ว');
+            return;
+        }
+        if (list.length >= 2) {
+            list.shift(); // Remove oldest
+        }
+        list.push(id);
+        localStorage.setItem('lx_compare', JSON.stringify(list));
+        showToast('เพิ่มลงในรายการเปรียบเทียบแล้ว');
+        setTimeout(() => { window.location.href = '/compare.html'; }, 1000);
+    }
+    function addToCart(product) {
+        if (product.stock_quantity <= 0) {
+            alert('สินค้าหมด');
+            return;
+        }
+        const cart = getCart();
+        const existing = cart.find(item => item.id === product.id);
+        const currentQty = existing ? existing.quantity : 0;
+        
+        if (currentQty >= product.stock_quantity) {
+            alert('ไม่สามารถเพิ่มสินค้าได้ เนื่องจากถึงขีดจำกัดสต๊อกที่มีอยู่แล้ว');
+            return;
+        }
+
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({ ...product, quantity: 1 });
+        }
+        saveCart(cart);
+        showToast(`เพิ่ม "${product.name.substring(0, 30)}..." ลงตะกร้าแล้ว!`);
+    }
+    function updateCartCount() {
+        const cart = getCart();
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('cart-count').textContent = total;
+    }
+
+    // --- Toast ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 2500);
+    }
+
+    // --- Wishlist ---
+    async function toggleWishlist(productId, btnElement) {
+        if (!user) {
+            window.location.href = '/login.html';
+            return;
+        }
+        try {
+            const res = await fetch('/api/wishlists/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, product_id: productId })
+            });
+            const json = await res.json();
+            if (json.success) {
+                showToast(json.message);
+                const icon = btnElement.querySelector('i');
+                if (json.is_wished) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid', 'text-gamer-red');
+                } else {
+                    icon.classList.remove('fa-solid', 'text-gamer-red');
+                    icon.classList.add('fa-regular');
+                }
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // --- ไอคอนประจำหมวดหมู่ ---
+    function getCategoryIcon(name) {
+        if (name.includes('การ์ดจอ')) return 'fa-solid fa-server';
+        if (name.includes('ซีพียู')) return 'fa-solid fa-microchip';
+        if (name.includes('แรม')) return 'fa-solid fa-memory';
+        if (name.includes('เมนบอร์ด')) return 'fa-solid fa-chess-board';
+        if (name.includes('อุปกรณ์')) return 'fa-solid fa-keyboard';
+        return 'fa-solid fa-box';
+    }
+
+    // --- สีป้ายสภาพสินค้า ---
+    function getConditionStyle(condition) {
+        if (condition.includes('99%')) return 'border-gamer-cyan/50 text-gamer-cyan';
+        if (condition.includes('95%')) return 'border-gamer-teal/50 text-gamer-teal';
+        if (condition.includes('นางฟ้า')) return 'border-gamer-cyan/50 text-gamer-cyan';
+        if (condition.includes('ไม่มีกล่อง')) return 'border-orange-500/50 text-orange-400';
+        return 'border-gamer-teal/50 text-gamer-teal';
+    }
+
+    // --- โหลดหมวดหมู่จาก API ---
+    let currentCategory = null;
+
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API_URL}/api/categories`);
+            const json = await res.json();
+            const container = document.getElementById('categories-container');
+
+            // ปุ่ม "ทั้งหมด"
+            let html = `
+                <button onclick="filterByCategory(null)" id="cat-all"
+                    class="cat-btn flex items-center gap-3 px-5 py-3 sm:px-8 sm:py-4 bg-gamer-gray border border-gamer-cyan rounded-xl shadow-[0_0_15px_rgba(102,252,241,0.2)] -translate-y-1 transition-all duration-300 group">
+                    <i class="fa-solid fa-border-all text-2xl text-gamer-cyan"></i>
+                    <span class="font-bold text-gamer-cyan text-sm sm:text-base">ทั้งหมด</span>
+                </button>
+            `;
+
+            json.data.forEach(cat => {
+                html += `
+                    <button onclick="filterByCategory(${cat.id}, '${cat.name}')" id="cat-${cat.id}"
+                        class="cat-btn flex items-center gap-3 px-5 py-3 sm:px-8 sm:py-4 bg-gamer-gray border border-gamer-teal/30 rounded-xl hover:border-gamer-cyan hover:shadow-[0_0_15px_rgba(102,252,241,0.2)] hover:-translate-y-1 transition-all duration-300 group">
+                        <i class="${getCategoryIcon(cat.name)} text-2xl text-gamer-lightgray group-hover:text-gamer-cyan transition-colors"></i>
+                        <span class="font-bold text-white group-hover:text-gamer-cyan transition-colors text-sm sm:text-base">${cat.name.split(' (')[0]}</span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        } catch (err) {
+            console.error('โหลดหมวดหมู่ไม่สำเร็จ:', err);
+        }
+    }
+
+    // --- กรองตามหมวดหมู่ ---
+    async function filterByCategory(categoryId, categoryName) {
+        currentCategory = categoryId;
+        // อัปเดตหัวข้อ
+        document.getElementById('section-title').textContent = categoryId ? categoryName : 'สินค้าแนะนำ';
+        // อัปเดตสไตล์ปุ่ม
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.classList.remove('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            btn.classList.add('border-gamer-teal/30');
+            btn.querySelector('i').classList.remove('text-gamer-cyan');
+            btn.querySelector('i').classList.add('text-gamer-lightgray');
+            btn.querySelector('span').classList.remove('text-gamer-cyan');
+            btn.querySelector('span').classList.add('text-white');
+        });
+        const activeBtn = document.getElementById(categoryId ? `cat-${categoryId}` : 'cat-all');
+        if (activeBtn) {
+            activeBtn.classList.add('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            activeBtn.classList.remove('border-gamer-teal/30');
+            activeBtn.querySelector('i').classList.add('text-gamer-cyan');
+            activeBtn.querySelector('i').classList.remove('text-gamer-lightgray');
+            activeBtn.querySelector('span').classList.add('text-gamer-cyan');
+            activeBtn.querySelector('span').classList.remove('text-white');
+        }
+        await loadProducts(categoryId);
+    }
+
+    function filterByPromo() {
+        document.getElementById('section-title').textContent = '🔥 สินค้าราคาพิเศษ & โปรโมชั่น';
+        currentCategory = 'promo';
+        
+        // Reset category styles
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.classList.remove('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            btn.classList.add('border-gamer-teal/30');
+            btn.querySelector('i').classList.remove('text-gamer-cyan');
+            btn.querySelector('i').classList.add('text-gamer-lightgray');
+            btn.querySelector('span').classList.remove('text-gamer-cyan');
+            btn.querySelector('span').classList.add('text-white');
+        });
+
+        loadProducts('promo');
+    }
+
+    // --- โหลดสินค้าจาก API ---
+    async function loadProducts(categoryId) {
+        const grid = document.getElementById('products-grid');
+        
+        // Skeleton Loader
+        let skeletonHtml = '';
+        for(let i=0; i<8; i++) {
+            skeletonHtml += `
+                <div class="bg-gamer-dark rounded-2xl overflow-hidden border border-gamer-teal/10 animate-pulse h-full flex flex-col">
+                    <div class="w-full h-48 sm:h-56 bg-gamer-gray"></div>
+                    <div class="p-5 flex flex-col flex-grow space-y-4">
+                        <div class="h-4 bg-gamer-gray rounded w-1/3"></div>
+                        <div class="h-5 bg-gamer-gray rounded w-3/4"></div>
+                        <div class="h-4 bg-gamer-gray rounded w-1/2"></div>
+                        <div class="mt-auto pt-4 flex justify-between items-center">
+                            <div class="h-6 bg-gamer-gray rounded w-1/3"></div>
+                            <div class="h-10 w-10 bg-gamer-gray rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        grid.innerHTML = skeletonHtml;
+        try {
+            let urlStr = API_URL ? `${API_URL}/api/products` : '/api/products';
+            const params = new URLSearchParams();
+            if (categoryId && categoryId !== 'promo') {
+                params.append('category', categoryId);
+            }
+
+            const conditionFilter = document.getElementById('filter-condition').value;
+            const sortFilter = document.getElementById('filter-sort').value;
+            const minPrice = document.getElementById('filter-min-price').value;
+            const maxPrice = document.getElementById('filter-max-price').value;
+            const searchInput = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
+
+            if (conditionFilter && conditionFilter !== 'all') params.append('condition', conditionFilter);
+            if (sortFilter && sortFilter !== 'default') params.append('sortBy', sortFilter);
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            if (searchInput) params.append('search', searchInput);
+
+            const queryString = params.toString();
+            if (queryString) {
+                urlStr += `?${queryString}`;
+            }
+
+            const res = await fetch(urlStr);
+            const json = await res.json();
+            
+            let displayData = json.data || [];
+            if (categoryId === 'promo') {
+                displayData = displayData.filter(p => p.discount_price || p.promo_tag);
+            }
+
+            if (displayData.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <i class="fa-solid fa-box-open text-gamer-teal text-5xl mb-4"></i>
+                        <p class="text-gamer-lightgray text-lg">ไม่พบสินค้าในหมวดหมู่นี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = displayData.map(product => `
+                <div class="bg-gamer-gray border border-gamer-teal/20 rounded-2xl overflow-hidden hover:border-gamer-cyan/50 hover:shadow-[0_0_25px_rgba(69,162,158,0.2)] transition-all duration-300 group flex flex-col relative">
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-gamer-dark/80 z-10 pointer-events-none"></div>
+                    <div class="absolute top-4 right-4 z-30 flex flex-col gap-2">
+                        <button onclick="toggleWishlist('${product.id}', this)" class="w-8 h-8 bg-gamer-dark/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gamer-red hover:text-white transition-all" title="บันทึกที่ถูกใจ">
+                            <i class="fa-regular fa-heart text-gamer-lightgray"></i>
+                        </button>
+                        <button onclick="addToCompare('${product.id}')" class="w-8 h-8 bg-gamer-dark/80 backdrop-blur-sm rounded-full flex items-center justify-center hover:bg-gamer-cyan hover:text-gamer-dark transition-all" title="เปรียบเทียบสเปค">
+                            <i class="fa-solid fa-code-compare text-gamer-lightgray"></i>
+                        </button>
+                    </div>
+                    <a href="/product.html?id=${product.id}" class="relative overflow-hidden bg-white/5 aspect-square p-8 flex items-center justify-center cursor-pointer">
+                        <span class="absolute top-4 left-4 z-20 bg-gamer-dark/90 backdrop-blur-sm border ${getConditionStyle(product.condition_level)} text-xs font-bold px-2.5 py-1 rounded-md shadow-lg tracking-wide">${product.condition_level}</span>
+                        ${product.promo_tag ? `<span class="absolute top-10 left-4 z-20 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg shadow-red-500/40 animate-pulse tracking-wide"><i class="fa-solid fa-fire mr-1"></i>${product.promo_tag}</span>` : ''}
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-contain group-hover:scale-110 group-hover:rotate-2 transition-transform duration-500 drop-shadow-[0_10px_15px_rgba(0,0,0,0.5)] z-0">
+                    </a>
+                    <div class="p-6 flex flex-col flex-grow relative z-20 bg-gamer-gray">
+                        <div class="text-xs text-gamer-teal mb-2 font-bold tracking-widest">${product.category_name || ''}</div>
+                        <a href="/product.html?id=${product.id}" class="text-lg font-bold text-white mb-2 line-clamp-2 leading-snug group-hover:text-gamer-cyan transition-colors cursor-pointer">${product.name}</a>
+                        <p class="text-sm text-gamer-lightgray/70 mb-6 flex-grow line-clamp-2">${product.description || ''}</p>
+                        <div class="flex items-center justify-between mt-auto">
+                            <div>
+                                ${product.discount_price 
+                                    ? `<div class="text-xs text-gamer-lightgray/50 line-through">฿${Number(product.price).toLocaleString()}</div>
+                                       <div class="font-gaming text-2xl sm:text-3xl font-bold text-gamer-cyan">฿${Number(product.discount_price).toLocaleString()}</div>`
+                                    : `<div class="font-gaming text-3xl font-bold text-white">฿${Number(product.price).toLocaleString()}</div>`
+                                }
+                            </div>
+                            ${product.stock_quantity > 0 
+                                ? `<button onclick='addToCart(${JSON.stringify({ id: product.id, name: product.name, price: product.price, image_url: product.image_url, stock_quantity: product.stock_quantity })})' class="bg-gamer-teal/10 border border-gamer-teal/30 hover:bg-gamer-cyan hover:border-gamer-cyan text-gamer-cyan hover:text-gamer-dark w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-[0_0_15px_rgba(102,252,241,0.5)]">
+                                    <i class="fa-solid fa-cart-plus text-lg"></i>
+                                </button>`
+                                : `<div class="bg-gamer-red/10 border border-gamer-red/30 text-gamer-red text-xs font-bold px-3 py-2 rounded-xl flex items-center justify-center whitespace-nowrap">สินค้าหมด</div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-20">
+                    <i class="fa-solid fa-triangle-exclamation text-gamer-red text-5xl mb-4"></i>
+                    <p class="text-gamer-lightgray text-lg">ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่</p>
+                </div>
+            `;
+            console.error('โหลดสินค้าไม่สำเร็จ:', err);
+        }
+    }
+
+    // --- ค้นหาสินค้า ---
+    function searchProducts() {
+        const query = document.getElementById('search-input').value.trim();
+        if (query) {
+            document.getElementById('section-title').textContent = `ผลการค้นหา "${query}"`;
+        } else {
+            document.getElementById('section-title').textContent = 'สินค้าแนะนำ';
+        }
+        loadProducts(currentCategory);
+    }
+
+    // ค้นหาเมื่อกด Enter
+    document.getElementById('search-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') { searchProducts(); document.getElementById('search-dropdown').classList.add('hidden'); } });
+
+    // --- Autocomplete (ช่องค้นหาแบบพิมพ์แล้วขึ้นเลย) ---
+    const searchDropdown = document.getElementById('search-dropdown');
+    let allProductsCache = [];
+
+    async function loadAllProductsForSearch() {
+        try {
+            const res = await fetch(`${API_URL}/api/products`);
+            const json = await res.json();
+            allProductsCache = json.data;
+        } catch (e) { console.error('Failed to load products cache for search'); }
+    }
+
+    document.getElementById('search-input')?.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        if (!query) {
+            searchDropdown.classList.add('hidden');
+            return;
+        }
+
+        // ค้นหาจำกัด 5 รายการ
+        const filtered = allProductsCache.filter(p => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query))).slice(0, 5);
+        
+        if (filtered.length === 0) {
+            searchDropdown.innerHTML = `<div class="px-4 py-3 text-sm text-gamer-lightgray/50">ไม่พบสินค้า "${query}"</div>`;
+            searchDropdown.classList.remove('hidden');
+            return;
+        }
+
+        searchDropdown.innerHTML = filtered.map(p => `
+            <a href="/product.html?id=${p.id}" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 border-b border-gamer-teal/10 last:border-0 transition-colors">
+                <img src="${p.image_url}" class="w-10 h-10 object-contain bg-white/5 rounded-md" alt="${p.name}">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-white truncate">${p.name}</div>
+                    <div class="text-xs text-gamer-teal">
+                        ${p.discount_price ? `<span class="line-through text-gamer-lightgray/50 mr-1">฿${Number(p.price).toLocaleString()}</span><span class="text-gamer-cyan">฿${Number(p.discount_price).toLocaleString()}</span>` : `฿${Number(p.price).toLocaleString()}`}
+                        ${p.stock_quantity <= 0 ? '<span class="text-gamer-red ml-1 font-bold">(สินค้าหมด)</span>' : ''}
+                    </div>
+                </div>
+            </a>
+        `).join('');
+        searchDropdown.classList.remove('hidden');
+    });
+
+    // ปิด Dropdown เมื่อคลิกที่อื่น
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('search-input').contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('hidden');
+        }
+    });
+
+    // --- Advanced Filters Events ---
+    document.getElementById('filter-condition').addEventListener('change', () => loadProducts(currentCategory));
+    document.getElementById('filter-sort').addEventListener('change', () => loadProducts(currentCategory));
+
+    // --- Flash Sale Logic ---
+    function initFlashSale() {
+        const grid = document.getElementById('flash-sale-grid');
+        const flashProducts = allProductsCache.filter(p => p.discount_price).slice(0, 4);
+        if (flashProducts.length > 0) {
+            document.getElementById('flash-sale-section').classList.remove('hidden');
+            grid.innerHTML = flashProducts.map(product => `
+                <div class="bg-gamer-dark/80 border border-gamer-red/30 rounded-2xl overflow-hidden hover:border-gamer-red hover:shadow-[0_0_25px_rgba(255,75,75,0.2)] transition-all duration-300 group flex flex-col relative">
+                    <a href="/product.html?id=${product.id}" class="relative overflow-hidden bg-white/5 aspect-square p-6 flex items-center justify-center cursor-pointer">
+                        <span class="absolute top-3 left-3 z-20 bg-gamer-red text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg tracking-wide"><i class="fa-solid fa-fire mr-1"></i>ลดเดือด</span>
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-contain group-hover:scale-110 group-hover:rotate-2 transition-transform duration-500 z-0">
+                    </a>
+                    <div class="p-4 flex flex-col flex-grow relative z-20">
+                        <a href="/product.html?id=${product.id}" class="text-sm font-bold text-white mb-2 line-clamp-2 leading-snug group-hover:text-gamer-cyan transition-colors cursor-pointer">${product.name}</a>
+                        <div class="flex items-center justify-between mt-auto">
+                            <div>
+                                <div class="text-xs text-gamer-lightgray/50 line-through">฿${Number(product.price).toLocaleString()}</div>
+                                <div class="font-gaming text-xl font-bold text-yellow-400">฿${Number(product.discount_price).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            startCountdown();
+        }
+    }
+
+    function startCountdown() {
+        // Set midnight tonight
+        const midnight = new Date();
+        midnight.setHours(23, 59, 59, 0);
+
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = midnight.getTime() - now;
+            
+            if (distance < 0) {
+                document.getElementById('countdown-timer').innerHTML = "EXPIRED";
+                return;
+            }
+            
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('cd-hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('cd-minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('cd-seconds').textContent = seconds.toString().padStart(2, '0');
+        }, 1000);
+    }
+
+    // --- Live Chat Logic ---
+    function getChatUserId() {
+        let user = null;
+        try {
+            const str = localStorage.getItem('lx_user');
+            if (str && str !== 'undefined') user = JSON.parse(str);
+        } catch(e) {}
+        if (user && user.id) return user.id;
+        
+        let guestId = localStorage.getItem('lx_guest_id');
+        if (!guestId) {
+            guestId = 'guest_' + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('lx_guest_id', guestId);
+        }
+        return guestId;
+    }
+
+    function getChatUserName() {
+        let user = null;
+        try {
+            const str = localStorage.getItem('lx_user');
+            if (str && str !== 'undefined') user = JSON.parse(str);
+        } catch(e) {}
+        if (user && user.first_name) return user.first_name;
+        return 'ลูกค้าทั่วไป';
+    }
+
+    async function loadChatHistory() {
+        const userId = getChatUserId();
+        const messages = document.getElementById('chat-messages');
+        messages.innerHTML = '<p class="text-gamer-lightgray/50 text-center text-xs my-4">กำลังโหลดประวัติแชท...</p>';
+        try {
+            const res = await fetch(`/api/chat/history/${userId}`);
+            const json = await res.json();
+            if (json.success && json.data.length > 0) {
+                messages.innerHTML = json.data.map(m => {
+                    const isMe = m.sender_type === 'user';
+                    if (isMe) {
+                        return `
+                            <div class="bg-gamer-cyan/20 text-white text-sm p-3 rounded-xl rounded-tr-none max-w-[85%] border border-gamer-cyan/30 self-end ml-auto mb-2 w-fit">
+                                ${m.message}
+                            </div>
+                        `;
+                    } else {
+                        return `
+                            <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 border-l-2 border-l-gamer-cyan mb-2 w-fit">
+                                <i class="fa-solid fa-headset text-gamer-cyan mr-1"></i> <b>Admin:</b> ${m.message}
+                            </div>
+                        `;
+                    }
+                }).join('');
+            } else {
+                messages.innerHTML = '<p class="text-gamer-lightgray/50 text-center text-xs my-4">เริ่มสนทนากับแอดมินได้เลยครับ</p>';
+            }
+            messages.scrollTop = messages.scrollHeight;
+        } catch (err) {
+            messages.innerHTML = '<p class="text-gamer-lightgray/50 text-center text-xs my-4">โหลดประวัติแชทล้มเหลว</p>';
+        }
+    }
+
+    function toggleChat() {
+        const box = document.getElementById('chat-box');
+        const isHidden = box.classList.contains('scale-0');
+        if (isHidden) {
+            box.classList.remove('scale-0', 'opacity-0');
+            box.classList.add('scale-100', 'opacity-100');
+            loadChatHistory();
+        } else {
+            box.classList.add('scale-0', 'opacity-0');
+            box.classList.remove('scale-100', 'opacity-100');
+        }
+    }
+
+    // --- Live Chat Logic (Socket.IO) ---
+    const socket = io(); // Connect to Socket.IO Server
+    
+    // เข้าร่วมห้องแชทด้วยไอดีคงที่
+    socket.emit('join_chat', { userId: getChatUserId(), name: getChatUserName() });
+
+    // Listen for replies from Admin
+    socket.on('admin_reply_message', (data) => {
+        const messages = document.getElementById('chat-messages');
+        const typingEl = document.getElementById('typing-indicator');
+        if (typingEl) typingEl.remove();
+
+        messages.innerHTML += `
+            <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 border-l-2 border-l-gamer-cyan mb-2 w-fit">
+                <i class="fa-solid fa-headset text-gamer-cyan mr-1"></i> <b>Admin:</b> ${data.text}
+            </div>
+        `;
+        messages.scrollTop = messages.scrollHeight;
+        
+        // Auto-open chat if hidden
+        const box = document.getElementById('chat-box');
+        if (box.classList.contains('scale-0')) {
+            toggleChat();
+        }
+    });
+
+    let currentChatMode = 'admin';
+
+    window.switchChatMode = function(mode) {
+        currentChatMode = mode;
+        const btnAdmin = document.getElementById('btn-chat-admin');
+        const btnAi = document.getElementById('btn-chat-ai');
+        const headerIcon = document.getElementById('chat-header-icon');
+        const headerTitle = document.getElementById('chat-header-title');
+        const headerStatus = document.getElementById('chat-header-status');
+        const messages = document.getElementById('chat-messages');
+
+        if (mode === 'admin') {
+            btnAdmin.className = 'flex-1 text-center py-1.5 rounded-lg font-bold bg-gamer-cyan text-gamer-dark transition-all';
+            btnAi.className = 'flex-1 text-center py-1.5 rounded-lg font-bold text-gamer-lightgray hover:text-white transition-all bg-gamer-gray';
+            headerIcon.className = 'fa-solid fa-headset';
+            headerTitle.textContent = 'LX Support';
+            headerStatus.innerHTML = '<i class="fa-solid fa-circle text-[8px]"></i> Online';
+            headerStatus.className = 'text-gamer-green text-[10px]';
+            
+            messages.innerHTML = `
+                <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 mb-2 w-fit">
+                    สวัสดีครับ 🙏 LX Shop ยินดีให้บริการครับ สนใจให้แอดมินแนะนำสินค้า จัดสเปค หรือสอบถามข้อมูลเพิ่มเติม พิมพ์ทิ้งไว้ได้เลยครับ!
+                </div>
+            `;
+            loadChatHistory();
+        } else {
+            btnAdmin.className = 'flex-1 text-center py-1.5 rounded-lg font-bold text-gamer-lightgray hover:text-white transition-all bg-gamer-gray';
+            btnAi.className = 'flex-1 text-center py-1.5 rounded-lg font-bold bg-gamer-cyan text-gamer-dark transition-all';
+            headerIcon.className = 'fa-solid fa-robot';
+            headerTitle.textContent = 'ช่างหนุ่ม AI Tech';
+            headerStatus.innerHTML = '<i class="fa-solid fa-circle text-[8px]"></i> AI 24/7';
+            headerStatus.className = 'text-gamer-cyan text-[10px]';
+
+            messages.innerHTML = `
+                <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 mb-2 w-fit">
+                    สวัสดีครับ! ผมคือบอท "ช่างหนุ่มไอที" 🤖 ยินดีช่วยเหลือตอบคำถามด้านเทคนิคคอมพิวเตอร์และแนะนำสเปคสินค้าให้ในร้านได้ทันที 24 ชั่วโมงครับ ถามมาได้เลย!
+                </div>
+            `;
+        }
+    };
+
+    async function sendChatMessage() {
+        const input = document.getElementById('chat-input');
+        const text = input.value.trim();
+        if (!text) return;
+        
+        const messages = document.getElementById('chat-messages');
+        messages.innerHTML += `
+            <div class="bg-gamer-cyan/20 text-white text-sm p-3 rounded-xl rounded-tr-none max-w-[85%] border border-gamer-cyan/30 self-end ml-auto mb-2 w-fit">
+                ${text}
+            </div>
+        `;
+        input.value = '';
+        messages.scrollTop = messages.scrollHeight;
+
+        if (currentChatMode === 'admin') {
+            let chatUser = null;
+            try {
+                const str = localStorage.getItem('lx_user');
+                if (str && str !== 'undefined') chatUser = JSON.parse(str);
+            } catch(e) {}
+            const name = chatUser ? chatUser.first_name : 'ลูกค้าทั่วไป';
+            socket.emit('user_message', { text, name });
+
+            messages.innerHTML += `
+                <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20" id="typing-indicator">
+                    <i class="fa-solid fa-ellipsis fa-fade text-gamer-cyan"></i> แอดมินกำลังพิมพ์...
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+        } else {
+            const typingId = 'typing-' + Date.now();
+            messages.innerHTML += `
+                <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 mb-2 w-fit text-xs" id="${typingId}">
+                    <i class="fa-solid fa-ellipsis fa-fade text-gamer-cyan"></i> ช่างหนุ่มกำลังคิด...
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+
+            try {
+                const res = await fetch('/api/chat/ai', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+                const json = await res.json();
+                
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+
+                if (json.success) {
+                    messages.innerHTML += `
+                        <div class="bg-gamer-gray text-white text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-teal/20 border-l-2 border-l-gamer-cyan mb-2 w-fit text-xs">
+                            <i class="fa-solid fa-robot text-gamer-cyan mr-1"></i> <b>ช่างหนุ่ม AI:</b> ${json.message.replace(/\n/g, '<br>')}
+                        </div>
+                    `;
+                } else {
+                    messages.innerHTML += `
+                        <div class="bg-gamer-gray text-gamer-red text-sm p-3 rounded-xl rounded-tl-none max-w-[85%] border border-gamer-red/20 mb-2 w-fit text-xs">
+                            ระบบขัดข้องในการสื่อสารกับบอท
+                        </div>
+                    `;
+                }
+                messages.scrollTop = messages.scrollHeight;
+            } catch (err) {
+                console.error(err);
+                const typingEl = document.getElementById(typingId);
+                if (typingEl) typingEl.remove();
+            }
+        }
+    }
+
+    // --- เริ่มต้นโหลดข้อมูล ---
+    updateCartCount();
+    loadCategories();
+    loadProducts();
+    loadAllProductsForSearch().then(initFlashSale);
+
+    // --- Daily Login Bonus ---
+    function checkDailyLogin() {
+        return; // Daily Login Bonus Disabled
+    }
+
+    window.claimDailyReward = async function(today, userId) {
+        try {
+            // Update points via backend API
+            const res = await fetch(`/api/users/${userId}/add-points`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ points: 100 })
+            });
+            const json = await res.json();
+            
+            if (json.success) {
+                // Save claim date to localStorage to prevent multiple claims today
+                localStorage.setItem('lx_last_login_' + userId, today);
+                
+                // Update localStorage user points
+                let storageUser = null;
+                try {
+                    const str = localStorage.getItem('lx_user');
+                    if (str && str !== 'undefined') storageUser = JSON.parse(str);
+                } catch(e) {}
+                
+                if (storageUser) {
+                    storageUser.points = (storageUser.points || 0) + 100;
+                    localStorage.setItem('lx_user', JSON.stringify(storageUser));
+                }
+            }
+            
+            // Trigger Confetti if available
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+            
+            // Find the button that calls claimDailyReward specifically
+            const buttons = document.querySelectorAll('#daily-reward-modal button');
+            if (buttons.length > 1) {
+                const btn = buttons[1];
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> รับแล้ว!';
+                btn.classList.replace('bg-gamer-cyan', 'bg-green-500');
+                btn.classList.replace('text-gamer-dark', 'text-white');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTimeout(() => {
+                const modal = document.getElementById('daily-reward-modal');
+                if (modal) modal.remove();
+            }, 1500);
+        }
+    };
+
+    // --- Dynamic Banners Logic ---
+    let currentBannerIndex = 0;
+    let banners = [];
+    let bannerInterval;
+
+    async function loadBanners() {
+        try {
+            const res = await fetch('/api/banners');
+            const json = await res.json();
+            if (json.success && json.data.length > 0) {
+                banners = json.data;
+                document.getElementById('dynamic-banners-section').classList.remove('hidden');
+                renderBanners();
+                startBannerAutoSlide();
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function renderBanners() {
+        const slider = document.getElementById('banner-slider');
+        const dots = document.getElementById('banner-dots');
+        
+        slider.innerHTML = banners.map(b => `
+            <div class="min-w-full h-full cursor-pointer flex-shrink-0 relative group" onclick="${b.link_url ? `window.location.href='${b.link_url}'` : ''}">
+                <img src="${b.image_url}" class="w-full h-full object-cover" alt="Banner">
+                <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+            </div>
+        `).join('');
+
+        dots.innerHTML = banners.map((_, i) => `
+            <button onclick="goToBanner(${i})" class="w-3 h-3 rounded-full transition-all ${i === currentBannerIndex ? 'bg-gamer-cyan w-6' : 'bg-white/50 hover:bg-white'}"></button>
+        `).join('');
+
+        updateBannerPosition();
+    }
+
+    function updateBannerPosition() {
+        const slider = document.getElementById('banner-slider');
+        slider.style.transform = `translateX(-${currentBannerIndex * 100}%)`;
+        
+        // Update dots
+        const dots = document.getElementById('banner-dots').children;
+        for (let i = 0; i < dots.length; i++) {
+            if (i === currentBannerIndex) {
+                dots[i].className = 'w-6 h-3 rounded-full transition-all bg-gamer-cyan';
+            } else {
+                dots[i].className = 'w-3 h-3 rounded-full transition-all bg-white/50 hover:bg-white';
+            }
+        }
+    }
+
+    window.nextBanner = () => {
+        currentBannerIndex = (currentBannerIndex + 1) % banners.length;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    window.prevBanner = () => {
+        currentBannerIndex = (currentBannerIndex - 1 + banners.length) % banners.length;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    window.goToBanner = (index) => {
+        currentBannerIndex = index;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    function startBannerAutoSlide() {
+        bannerInterval = setInterval(window.nextBanner, 5000); // 5 seconds
+    }
+
+    function resetBannerInterval() {
+        clearInterval(bannerInterval);
+        startBannerAutoSlide();
+    }
+
+    loadBanners();
+    checkDailyLogin();
+    </script>
+    <script src="/theme.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script src="/mobile-nav.js"></script>
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#66FCF1" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } },
+                    "size": { "value": 3, "random": true, "anim": { "enable": false } },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#45A29E", "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": { "enable": true, "mode": "grab" },
+                        "onclick": { "enable": true, "mode": "push" },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": { "distance": 140, "line_linked": { "opacity": 1 } },
+                        "push": { "particles_nb": 4 }
+                    }
+                },
+                "retina_detect": true
+            });
+        });
+    </script>
+<script src="/audio.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ตะกร้าสินค้า - LX Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B', green: '#2ecc71' } } } } }
+    </script>
+    <style>body { font-family: 'Prompt', sans-serif; } .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }</style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center gap-2 group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                </a>
+                <div class="flex items-center gap-6">
+                    <button class="theme-toggle text-gamer-lightgray hover:text-yellow-400 transition-colors text-xl" title="สลับโหมดหน้าจอ">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <a href="/" class="text-gamer-cyan hover:text-white transition-colors text-sm font-bold flex items-center gap-2">
+                        <i class="fa-solid fa-arrow-left"></i> กลับหน้าแรก
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Content -->
+    <section class="flex-grow py-12">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h1 class="font-gaming text-4xl font-bold text-white mb-8 flex items-center gap-3">
+                <i class="fa-solid fa-cart-shopping text-gamer-cyan"></i> ตะกร้าสินค้า
+            </h1>
+
+            <!-- Empty Cart -->
+            <div id="empty-cart" class="hidden text-center py-20">
+                <i class="fa-solid fa-cart-arrow-down text-gamer-teal/50 text-7xl mb-6"></i>
+                <p class="text-gamer-lightgray text-xl mb-2">ตะกร้าของคุณว่างเปล่า</p>
+                <p class="text-gamer-lightgray/50 mb-8">ยังไม่มีสินค้าในตะกร้า เริ่มช้อปปิ้งกันเลย!</p>
+                <a href="/" class="bg-gamer-cyan text-gamer-dark font-bold py-3 px-8 rounded-xl hover:bg-white transition-all inline-flex items-center gap-2">
+                    <i class="fa-solid fa-shopping-bag"></i> ไปช้อปปิ้ง
+                </a>
+            </div>
+
+            <!-- Cart Items -->
+            <div id="cart-items" class="space-y-4 mb-8"></div>
+
+            <!-- Cart Summary -->
+            <div id="cart-summary" class="hidden bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 mt-8">
+                <div class="flex justify-between items-center mb-4 pb-4 border-b border-gamer-teal/20">
+                    <span class="text-gamer-lightgray text-lg">จำนวนสินค้ารวม</span>
+                    <span id="total-items" class="text-white font-bold text-lg"></span>
+                </div>
+                <div class="flex justify-between items-center mb-8">
+                    <span class="text-white font-bold text-xl">ยอดรวมทั้งสิ้น</span>
+                    <span id="total-price" class="font-gaming text-4xl font-bold text-gamer-cyan"></span>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <a href="/checkout.html" class="flex-1 bg-gamer-cyan text-gamer-dark font-bold py-4 rounded-xl hover:bg-white transition-all transform hover:-translate-y-0.5 hover:shadow-[0_0_20px_rgba(102,252,241,0.5)] tracking-wider flex items-center justify-center gap-2 text-lg">
+                        <i class="fa-solid fa-credit-card"></i> ดำเนินการชำระเงิน
+                    </a>
+                    <button onclick="clearCart()" class="flex-1 bg-gamer-gray border border-gamer-red/30 text-gamer-red font-bold py-4 rounded-xl hover:bg-gamer-red/10 transition-all tracking-wider flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-trash"></i> ล้างตะกร้า
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <script>
+    function getCart() { return JSON.parse(localStorage.getItem('lx_cart') || '[]'); }
+    function updateCartCount() {
+        const cart = getCart();
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('cart-count').textContent = total;
+    }
+    function saveCart(cart) { localStorage.setItem('lx_cart', JSON.stringify(cart)); renderCart(); updateCartCount(); }
+
+    function removeItem(id) { saveCart(getCart().filter(item => item.id !== id)); }
+    function updateQty(id, delta) {
+        const cart = getCart();
+        const item = cart.find(i => i.id === id);
+        if (item) {
+            const newQty = item.quantity + delta;
+            if (newQty > item.stock_quantity) {
+                alert('ไม่สามารถเพิ่มจำนวนได้ เนื่องจากถึงขีดจำกัดสต๊อกที่มีอยู่');
+                return;
+            }
+            item.quantity = newQty;
+            if (item.quantity <= 0) { saveCart(cart.filter(i => i.id !== id)); return; }
+        }
+        saveCart(cart);
+    }
+    function clearCart() { localStorage.removeItem('lx_cart'); renderCart(); }
+
+    function renderCart() {
+        const cart = getCart();
+        const container = document.getElementById('cart-items');
+        const emptyDiv = document.getElementById('empty-cart');
+        const summaryDiv = document.getElementById('cart-summary');
+
+        if (cart.length === 0) {
+            container.innerHTML = '';
+            emptyDiv.classList.remove('hidden');
+            summaryDiv.classList.add('hidden');
+            return;
+        }
+
+        emptyDiv.classList.add('hidden');
+        summaryDiv.classList.remove('hidden');
+
+        container.innerHTML = cart.map(item => `
+            <div class="bg-gamer-gray border border-gamer-teal/20 rounded-xl p-4 flex items-center gap-4 hover:border-gamer-teal/40 transition-colors">
+                <a href="/product.html?id=${item.id}" class="w-20 h-20 bg-white/5 rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center p-2">
+                    <img src="${item.image_url}" alt="${item.name}" class="w-full h-full object-contain">
+                </a>
+                <div class="flex-grow min-w-0">
+                    <a href="/product.html?id=${item.id}" class="text-white font-bold hover:text-gamer-cyan transition-colors line-clamp-1">${item.name}</a>
+                    <div class="text-gamer-cyan font-bold mt-1">฿${Number(item.price).toLocaleString()}</div>
+                </div>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <button onclick="updateQty('${item.id}', -1)" class="w-8 h-8 bg-gamer-dark border border-gamer-teal/30 rounded-lg flex items-center justify-center text-white hover:border-gamer-cyan hover:text-gamer-cyan transition-colors">
+                        <i class="fa-solid fa-minus text-xs"></i>
+                    </button>
+                    <span class="text-white font-bold w-8 text-center">${item.quantity}</span>
+                    <button onclick="updateQty('${item.id}', 1)" class="w-8 h-8 bg-gamer-dark border border-gamer-teal/30 rounded-lg flex items-center justify-center text-white hover:border-gamer-cyan hover:text-gamer-cyan transition-colors">
+                        <i class="fa-solid fa-plus text-xs"></i>
+                    </button>
+                </div>
+                <div class="text-white font-bold w-28 text-right flex-shrink-0">฿${(Number(item.price) * item.quantity).toLocaleString()}</div>
+                <button onclick="removeItem('${item.id}')" class="text-gamer-red/50 hover:text-gamer-red transition-colors flex-shrink-0">
+                    <i class="fa-solid fa-xmark text-xl"></i>
+                </button>
+            </div>
+        `).join('');
+
+        const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+        const totalPrice = cart.reduce((sum, i) => sum + Number(i.price) * i.quantity, 0);
+        document.getElementById('total-items').textContent = `${totalItems} ชิ้น`;
+        document.getElementById('total-price').textContent = `฿${totalPrice.toLocaleString()}`;
+    }
+
+    renderCart();
+    updateCartCount();
+    </script>
+    <script src="/theme.js"></script>
+<script src="/mobile-nav.js"></script>
+<script src="/audio.js"></script>
+</body>
+</html>

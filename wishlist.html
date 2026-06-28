@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สินค้าที่ถูกใจ - LX Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B', green: '#2ecc71' } } } } }
+    </script>
+    <style>body { font-family: 'Prompt', sans-serif; } .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }</style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center gap-2 group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                </a>
+                <div class="flex items-center gap-6">
+                    <a href="/profile.html" class="text-gamer-lightgray hover:text-gamer-cyan text-sm flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-user"></i> บัญชีของฉัน
+                    </a>
+                    <a href="/cart.html" class="text-gamer-lightgray hover:text-gamer-cyan transition-colors flex items-center gap-2">
+                        <div class="relative">
+                            <i class="fa-solid fa-cart-shopping text-xl"></i>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-gamer-cyan text-gamer-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        <div class="flex items-center justify-between mb-8">
+            <h2 class="font-gaming text-3xl font-bold text-white border-l-4 border-gamer-red pl-4 flex items-center gap-3">
+                <i class="fa-solid fa-heart text-gamer-red"></i> สินค้าที่ถูกใจ
+            </h2>
+        </div>
+
+        <div id="wishlist-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <!-- Items go here -->
+            <div class="col-span-full text-center py-12">
+                <i class="fa-solid fa-spinner fa-spin text-4xl text-gamer-teal mb-4"></i>
+                <p>กำลังโหลด...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gamer-gray text-white font-bold px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(69,162,158,0.3)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2 border border-gamer-teal/30">
+        <i class="fa-solid fa-check-circle text-gamer-cyan"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gamer-dark border-t border-gamer-gray mt-12 py-8 text-center text-gamer-lightgray text-sm">
+        <p>&copy; 2026 LX Shop. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('lx_user'));
+        if (!user) {
+            window.location.href = '/login.html';
+        }
+
+        // Load Cart Count
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('lx_cart') || '[]');
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cart-count');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('opacity-0');
+            } else {
+                badge.classList.add('opacity-0');
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').textContent = msg;
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+            setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); toast.classList.remove('translate-y-0', 'opacity-100'); }, 2500);
+        }
+
+        async function toggleWishlist(productId, btnElement) {
+            try {
+                const res = await fetch('/api/wishlists/toggle', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user.id, product_id: productId })
+                });
+                const json = await res.json();
+                if (json.success) {
+                    showToast(json.message);
+                    loadWishlist(); // reload the list
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadWishlist() {
+            const container = document.getElementById('wishlist-container');
+            try {
+                const res = await fetch(`/api/wishlists/${user.id}`);
+                const json = await res.json();
+
+                if (!json.success || json.data.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center py-16 bg-gamer-gray/30 border border-gamer-teal/20 rounded-2xl">
+                            <i class="fa-regular fa-heart text-6xl text-gamer-lightgray/30 mb-4 block"></i>
+                            <p class="text-gamer-lightgray text-lg mb-4">ยังไม่มีสินค้าในรายการโปรด</p>
+                            <a href="/" class="inline-block bg-gamer-cyan text-gamer-dark font-bold py-2 px-6 rounded-lg hover:bg-white transition-all">กลับไปช้อปปิ้ง</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = json.data.map(p => {
+                    // คำนวณราคา
+                    let priceHtml = '';
+                    if (p.discount_price && Number(p.discount_price) > 0) {
+                        priceHtml = `
+                            <span class="text-gamer-lightgray/50 line-through text-sm">฿${Number(p.price).toLocaleString()}</span>
+                            <span class="text-gamer-cyan font-bold text-xl ml-2">฿${Number(p.discount_price).toLocaleString()}</span>
+                        `;
+                    } else {
+                        priceHtml = `<span class="text-gamer-cyan font-bold text-xl">฿${Number(p.price).toLocaleString()}</span>`;
+                    }
+
+                    return `
+                    <div class="bg-gamer-gray rounded-2xl overflow-hidden border border-gamer-teal/20 group relative flex flex-col">
+                        <!-- ปุ่มลบออกจาก Wishlist (ด้านขวาบน) -->
+                        <button onclick="toggleWishlist('${p.id}', this)" class="absolute top-3 right-3 w-8 h-8 bg-gamer-dark/80 backdrop-blur-sm rounded-full flex items-center justify-center text-gamer-red hover:bg-gamer-red hover:text-white transition-all z-10">
+                            <i class="fa-solid fa-heart"></i>
+                        </button>
+                        
+                        ${p.promo_tag ? `<div class="absolute top-3 left-3 bg-gamer-red text-white text-xs font-bold px-2 py-1 rounded-md z-10 shadow-lg">${p.promo_tag}</div>` : ''}
+                        
+                        <div class="h-48 p-4 bg-white/5 flex items-center justify-center overflow-hidden cursor-pointer" onclick="window.location.href='/product.html?id=${p.id}'">
+                            <img src="${p.image_url}" alt="${p.name}" class="max-h-full object-contain group-hover:scale-110 transition-transform duration-500">
+                        </div>
+                        <div class="p-5 flex flex-col flex-grow cursor-pointer" onclick="window.location.href='/product.html?id=${p.id}'">
+                            <h3 class="text-white font-bold mb-1 group-hover:text-gamer-cyan transition-colors line-clamp-2">${p.name}</h3>
+                            <p class="text-gamer-lightgray/60 text-xs mb-3 flex-grow">${p.category_name || ''}</p>
+                            <div class="flex justify-between items-end mt-auto">
+                                <div>${priceHtml}</div>
+                            </div>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (err) {
+                container.innerHTML = '<p class="col-span-full text-center text-gamer-red">ไม่สามารถโหลดข้อมูลได้</p>';
+            }
+        }
+
+        updateCartCount();
+        loadWishlist();
+    </script>
+</body>
+</html>

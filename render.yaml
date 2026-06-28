@@ -1,0 +1,22 @@
+# Render Blueprint Specification for LX Shop
+services:
+  - type: web
+    name: lx-shop
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        placeholder: "ใส่ Connection String ของ PostgreSQL (เช่น จาก Neon.tech)"
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DISCORD_WEBHOOK_URL
+        placeholder: "ใส่ Discord Webhook URL (ถ้ามี)"
+      - key: GEMINI_API_KEY
+        placeholder: "ใส่ Gemini API Key (ถ้ามี)"

@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - LX Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B', green: '#2ecc71' } } } } }
+    </script>
+    <style>
+        body { font-family: 'Prompt', sans-serif; } 
+        .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }
+        /* ซ่อนลูกศรขึ้นลง (Spin Button) ใน input type="number" */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] { 
+            -moz-appearance: textfield; 
+        }
+    </style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center gap-2 group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                    <span class="bg-gamer-red text-white text-xs font-bold px-2 py-1 rounded-md ml-2">ADMIN</span>
+                </a>
+                <div class="flex items-center gap-4">
+                    <button class="theme-toggle text-gamer-lightgray hover:text-yellow-400 transition-colors text-xl mr-2" title="สลับโหมดหน้าจอ">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <a href="/" class="text-gamer-lightgray hover:text-gamer-cyan text-sm flex items-center gap-1"><i class="fa-solid fa-store"></i> ดูหน้าร้าน</a>
+                    <button onclick="logout()" class="text-gamer-red hover:text-white text-sm flex items-center gap-1"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mb-8 border-b border-gamer-teal/20 pb-4 overflow-x-auto">
+            <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-btn bg-gamer-cyan text-gamer-dark font-bold py-2 px-6 rounded-lg transition-all flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-chart-line"></i> แดชบอร์ด
+            </button>
+            <button onclick="showTab('products')" id="tab-products" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2 whitespace-nowrap">
+                <i class="fa-solid fa-box"></i> จัดการสินค้า
+            </button>
+            <button onclick="showTab('orders')" id="tab-orders" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2">
+                <i class="fa-solid fa-clipboard-list"></i> คำสั่งซื้อ
+            </button>
+            <button onclick="showTab('users')" id="tab-users" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2">
+                <i class="fa-solid fa-users"></i> ลูกค้า
+            </button>
+            <button onclick="showTab('chat')" id="tab-chat" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2">
+                <i class="fa-solid fa-comments"></i> แชทสด
+                <span id="chat-badge" class="bg-gamer-red text-white text-xs px-2 py-0.5 rounded-full hidden ml-1">0</span>
+            </button>
+            <button onclick="showTab('banners')" id="tab-banners" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2">
+                <i class="fa-solid fa-image"></i> จัดการแบนเนอร์
+            </button>
+            <button onclick="showTab('consignments')" id="tab-consignments" class="tab-btn bg-gamer-gray text-gamer-lightgray font-bold py-2 px-6 rounded-lg hover:text-white transition-all flex items-center gap-2">
+                <i class="fa-solid fa-handshake"></i> ฝากขาย C2C
+            </button>
+        </div>
+
+        <!-- Dashboard Tab -->
+        <div id="panel-dashboard" class="relative z-10">
+            <!-- Summary Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-gamer-cyan/20 flex items-center justify-center text-gamer-cyan text-2xl">
+                        <i class="fa-solid fa-coins"></i>
+                    </div>
+                    <div>
+                        <p class="text-gamer-lightgray text-sm">ยอดขายรวม</p>
+                        <h4 id="dash-revenue" class="text-white text-2xl font-bold font-gaming">฿0</h4>
+                    </div>
+                </div>
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-gamer-teal/20 flex items-center justify-center text-gamer-teal text-2xl">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                    </div>
+                    <div>
+                        <p class="text-gamer-lightgray text-sm">คำสั่งซื้อทั้งหมด</p>
+                        <h4 id="dash-orders" class="text-white text-2xl font-bold font-gaming">0</h4>
+                    </div>
+                </div>
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-gamer-red/20 flex items-center justify-center text-gamer-red text-2xl">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div>
+                        <p class="text-gamer-lightgray text-sm">จำนวนลูกค้า</p>
+                        <h4 id="dash-users" class="text-white text-2xl font-bold font-gaming">0</h4>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6">
+                    <h3 class="font-gaming text-xl font-bold text-white mb-4">ยอดขายย้อนหลัง 7 วัน</h3>
+                    <canvas id="salesChart" height="250"></canvas>
+                </div>
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6">
+                    <h3 class="font-gaming text-xl font-bold text-white mb-4">สินค้าขายดี (Top 5)</h3>
+                    <canvas id="topProductsChart" height="250"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Tab -->
+        <div id="panel-products" class="relative z-10 hidden">
+            <!-- Add Product Form -->
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 mb-8 relative z-20">
+                <h3 class="font-gaming text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-gamer-cyan"></i> เพิ่มสินค้าใหม่
+                </h3>
+                <form id="add-product-form" class="grid grid-cols-1 md:grid-cols-2 gap-5 relative z-30">
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ชื่อสินค้า *</label>
+                        <input id="p-name" type="text" required class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all placeholder-gray-600 relative z-50">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">หมวดหมู่ *</label>
+                        <select id="p-category" required class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                            <option value="">เลือกหมวดหมู่</option>
+                        </select>
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ราคา (บาท) *</label>
+                        <input id="p-price" type="number" required min="0" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ราคาทุน (บาท)</label>
+                        <input id="p-cost-price" type="number" min="0" placeholder="0" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">สภาพสินค้า *</label>
+                        <select id="p-condition" required class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                            <option value="สภาพ 99%">สภาพ 99%</option>
+                            <option value="สภาพ 95%">สภาพ 95%</option>
+                            <option value="สภาพนางฟ้า">สภาพนางฟ้า</option>
+                            <option value="ไม่มีกล่อง">ไม่มีกล่อง</option>
+                        </select>
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">การรับประกัน *</label>
+                        <input id="p-warranty" type="text" list="warranty-options" required placeholder="เช่น รับประกัน 30 วัน" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                        <datalist id="warranty-options">
+                            <option value="รับประกัน 7 วัน"></option>
+                            <option value="รับประกัน 14 วัน"></option>
+                            <option value="รับประกัน 30 วัน"></option>
+                        </datalist>
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">จำนวน</label>
+                        <input id="p-stock" type="number" value="1" min="0" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">รูปภาพ (.jpg, .jpeg)</label>
+                        <input id="p-image" type="file" accept=".jpg,.jpeg" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-bold file:bg-gamer-teal/20 file:text-gamer-teal hover:file:bg-gamer-teal hover:file:text-gamer-dark">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ราคาโปรโมชั่น (ไม่บังคับ)</label>
+                        <input id="p-discount" type="number" min="0" placeholder="เว้นว่างถ้าราคาปกติ" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                    </div>
+                    <div class="relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ป้ายกำกับโปรโมชั่น (ไม่บังคับ)</label>
+                        <input id="p-tag" type="text" placeholder="เช่น 🔥 Hot Deal, ⚡ ลดล้างสต็อก" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50">
+                    </div>
+                    <div class="flex items-end relative z-40">
+                        <button type="submit" class="w-full bg-gamer-cyan text-gamer-dark font-bold py-3 rounded-xl hover:bg-white transition-all flex items-center justify-center gap-2 relative z-50 shadow-[0_0_15px_rgba(102,252,241,0.2)]">
+                            <i class="fa-solid fa-plus"></i> เพิ่มสินค้า
+                        </button>
+                    </div>
+                    <div class="md:col-span-2 relative z-40">
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">รายละเอียด</label>
+                        <textarea id="p-desc" rows="3" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan transition-all relative z-50"></textarea>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Products Table -->
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gamer-teal/20">
+                    <h3 class="font-gaming text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-stacked text-gamer-teal"></i> สินค้าทั้งหมด
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-black/30 text-gamer-lightgray/80">
+                                <th class="py-3 px-4 text-left">รูป</th>
+                                <th class="py-3 px-4 text-left">ชื่อสินค้า</th>
+                                <th class="py-3 px-4 text-left">หมวดหมู่</th>
+                                <th class="py-3 px-4 text-right">ราคาทุน/ขาย</th>
+                                <th class="py-3 px-4 text-center">คงเหลือ</th>
+                                <th class="py-3 px-4 text-center">สถานะ</th>
+                                <th class="py-3 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="products-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div id="panel-orders" class="hidden">
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gamer-teal/20">
+                    <h3 class="font-gaming text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-gamer-teal"></i> คำสั่งซื้อทั้งหมด
+                    </h3>
+                </div>
+                <div id="orders-list" class="p-6 space-y-4"></div>
+            </div>
+        </div>
+
+        <!-- Users/Customers Tab -->
+        <div id="panel-users" class="hidden">
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gamer-teal/20 flex justify-between items-center">
+                    <h3 class="font-gaming text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-users text-gamer-teal"></i> รายชื่อลูกค้าทั้งหมด
+                    </h3>
+                    <div id="users-summary" class="text-gamer-cyan font-bold text-lg"></div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-black/30 text-gamer-lightgray/80">
+                                <th class="py-3 px-4 text-left">ชื่อ-นามสกุล</th>
+                                <th class="py-3 px-4 text-left">อีเมล</th>
+                                <th class="py-3 px-4 text-center">วันที่สมัคร</th>
+                                <th class="py-3 px-4 text-center">จำนวนคำสั่งซื้อ</th>
+                                <th class="py-3 px-4 text-right">ยอดซื้อรวม (บาท)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Tab -->
+        <div id="panel-chat" class="hidden">
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl flex flex-col h-[600px] overflow-hidden">
+                <div class="p-6 border-b border-gamer-teal/20 flex justify-between items-center bg-black/20">
+                    <h3 class="font-gaming text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-comments text-gamer-teal"></i> แชทสดลูกค้า
+                    </h3>
+                </div>
+                <div class="flex-grow flex overflow-hidden">
+                    <!-- User List -->
+                    <div id="admin-chat-users" class="w-1/3 border-r border-gamer-teal/20 overflow-y-auto bg-gamer-dark/50 p-2 space-y-2">
+                        <p class="text-gamer-lightgray/50 text-center text-sm mt-4">ไม่มีแชทที่กำลังสนทนา</p>
+                    </div>
+                    <!-- Chat Box -->
+                    <div class="flex-grow flex flex-col bg-gamer-dark">
+                        <div id="admin-chat-messages" class="flex-grow p-6 overflow-y-auto space-y-4">
+                            <p class="text-gamer-lightgray/50 text-center mt-10">เลือกลูกค้าเพื่อเริ่มแชท</p>
+                        </div>
+                        <div class="p-4 border-t border-gamer-teal/20 bg-gamer-gray/30 flex gap-2">
+                            <input type="text" id="admin-chat-input" disabled class="flex-grow bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:outline-none focus:border-gamer-cyan" placeholder="พิมพ์ข้อความตอบกลับ...">
+                            <button onclick="sendAdminReply()" disabled id="admin-chat-send-btn" class="bg-gamer-cyan text-gamer-dark font-bold py-2 px-6 rounded-xl hover:bg-white transition-all"><i class="fa-solid fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Banners Tab -->
+        <div id="panel-banners" class="hidden">
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 mb-8">
+                <h3 class="font-gaming text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <i class="fa-solid fa-plus-circle text-gamer-cyan"></i> เพิ่มแบนเนอร์ใหม่
+                </h3>
+                <form id="add-banner-form" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">อัปโหลดรูปภาพ</label>
+                        <input type="file" id="b-image" accept=".jpg,.jpeg,.png" required class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:outline-none focus:border-gamer-cyan">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gamer-lightgray mb-2">ลิงก์ที่ต้องการให้ไป (ไม่บังคับ)</label>
+                        <input type="text" id="b-link" placeholder="เช่น /product.html?id=123" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-3 px-4 focus:outline-none focus:border-gamer-cyan">
+                    </div>
+                    <div class="md:col-span-2 flex justify-end">
+                        <button type="submit" class="bg-gamer-cyan text-gamer-dark font-bold py-3 px-8 rounded-xl hover:bg-white transition-all shadow-[0_0_15px_rgba(102,252,241,0.2)]">
+                            เพิ่มแบนเนอร์
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl overflow-hidden">
+                <div class="p-6 border-b border-gamer-teal/20">
+                    <h3 class="font-gaming text-2xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-images text-gamer-teal"></i> แบนเนอร์ทั้งหมด
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-black/30 text-gamer-lightgray/80">
+                                <th class="py-3 px-4 text-left">รูปแบนเนอร์</th>
+                                <th class="py-3 px-4 text-left">ลิงก์</th>
+                                <th class="py-3 px-4 text-center">สถานะ</th>
+                                <th class="py-3 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="banners-table"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Consignments Tab -->
+        <div id="panel-consignments" class="relative z-10 hidden">
+            <div class="bg-gamer-gray/30 border border-gamer-teal/20 rounded-2xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-gaming text-xl font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-handshake text-gamer-cyan"></i> ตรวจสอบคำขอฝากขาย C2C
+                    </h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-black/30 text-gamer-lightgray/80">
+                                <th class="py-3 px-4 text-left">สินค้า</th>
+                                <th class="py-3 px-4 text-left">ผู้ฝากขาย</th>
+                                <th class="py-3 px-4 text-left">ข้อมูลติดต่อ</th>
+                                <th class="py-3 px-4 text-left">ราคา</th>
+                                <th class="py-3 px-4 text-center">สถานะ</th>
+                                <th class="py-3 px-4 text-center">จัดการ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="consignments-table">
+                            <tr>
+                                <td colspan="6" class="py-6 text-center text-gamer-lightgray/50">กำลังโหลดคำขอฝากขาย...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Product Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center px-4">
+        <div class="bg-gamer-dark border border-gamer-teal/30 rounded-2xl w-full max-w-md p-6">
+            <h3 class="font-gaming text-2xl font-bold text-white mb-6">แก้ไขราคาสินค้า/สต๊อก</h3>
+            <form onsubmit="submitEditProduct(event)" class="space-y-4">
+                <input type="hidden" id="edit-id">
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">ราคาปกติ (บาท)</label>
+                    <input type="number" id="edit-price" required class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">ราคาลด (ไม่บังคับ)</label>
+                    <input type="number" id="edit-discount" class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">ราคาทุนล่าสุด (บาท)</label>
+                    <input type="number" id="edit-cost-price" class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">จำนวนสต๊อกรวมปัจจุบัน</label>
+                    <input type="number" id="edit-stock" required class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="button" onclick="closeEditModal()" class="flex-1 py-2 rounded-xl border border-gamer-teal/30 text-gamer-lightgray hover:bg-gamer-gray transition-colors">ยกเลิก</button>
+                    <button type="submit" class="flex-1 py-2 rounded-xl bg-gamer-cyan text-gamer-dark font-bold hover:bg-white transition-colors">บันทึก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stock In Modal -->
+    <div id="stock-in-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center px-4">
+        <div class="bg-gamer-dark border border-gamer-teal/30 rounded-2xl w-full max-w-md p-6">
+            <h3 class="font-gaming text-2xl font-bold text-white mb-2 flex items-center gap-2"><i class="fa-solid fa-truck-loading text-gamer-cyan"></i> นำเข้าสต๊อก</h3>
+            <p id="stock-in-product-name" class="text-gamer-lightgray text-sm mb-6 pb-4 border-b border-gamer-teal/20"></p>
+            <form onsubmit="submitStockIn(event)" class="space-y-4">
+                <input type="hidden" id="stock-in-id">
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">จำนวนที่นำเข้าเพิ่ม (ชิ้น) *</label>
+                    <input type="number" id="stock-in-qty" required min="1" class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div>
+                    <label class="block text-sm text-gamer-lightgray mb-2">ราคาทุนต่อชิ้น (รอบนี้) *</label>
+                    <input type="number" id="stock-in-cost" required min="0" class="w-full bg-gamer-gray text-white border border-gamer-teal/30 rounded-xl py-2 px-4 focus:border-gamer-cyan">
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="button" onclick="closeStockInModal()" class="flex-1 py-2 rounded-xl border border-gamer-teal/30 text-gamer-lightgray hover:bg-gamer-gray transition-colors">ยกเลิก</button>
+                    <button type="submit" class="flex-1 py-2 rounded-xl bg-gamer-teal text-white font-bold hover:bg-gamer-cyan hover:text-gamer-dark transition-colors"><i class="fa-solid fa-check"></i> ยืนยันรับเข้า</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gamer-cyan text-gamer-dark font-bold px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(102,252,241,0.5)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-check-circle"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <script>
+    // --- ระบบตรวจสอบสิทธิ์ความปลอดภัยแอดมิน (Security Auth Check) ---
+    (function() {
+        const userStr = localStorage.getItem('lx_user');
+        const token = localStorage.getItem('lx_token');
+        let user = null;
+        try {
+            if (userStr) user = JSON.parse(userStr);
+        } catch (e) {}
+        
+        if (!token || !user || user.role !== 'admin') {
+            alert('❌ คุณไม่มีสิทธิ์เข้าถึงหน้านี้ กรุณาเข้าสู่ระบบแอดมิน');
+            window.location.href = '/login.html';
+            // ป้องกันเบราว์เซอร์ดาวน์โหลดข้อมูลต่อ
+            throw new Error("Access Denied");
+        }
+    })();
+
+    // --- Fetch Interceptor สำหรับส่งโทเค็นแอดมิน ---
+    const originalFetch = window.fetch;
+    window.fetch = function(url, options) {
+        options = options || {};
+        options.headers = options.headers || {};
+        const token = localStorage.getItem('lx_token');
+        if (token) {
+            if (options.headers instanceof Headers) {
+                options.headers.set('Authorization', 'Bearer ' + token);
+            } else {
+                options.headers['Authorization'] = 'Bearer ' + token;
+            }
+        }
+        return originalFetch(url, options);
+    };
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => { toast.classList.add('translate-y-20', 'opacity-0'); toast.classList.remove('translate-y-0', 'opacity-100'); }, 2500);
+    }
+
+    function logout() { localStorage.removeItem('lx_user'); window.location.href = '/'; }
+
+    let globalUnreadCount = 0;
+
+    function showTab(tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => { b.classList.remove('bg-gamer-cyan', 'text-gamer-dark'); b.classList.add('bg-gamer-gray', 'text-gamer-lightgray'); });
+        document.getElementById(`tab-${tab}`).classList.add('bg-gamer-cyan', 'text-gamer-dark');
+        document.getElementById(`tab-${tab}`).classList.remove('bg-gamer-gray', 'text-gamer-lightgray');
+        
+        document.getElementById('panel-dashboard').classList.toggle('hidden', tab !== 'dashboard');
+        document.getElementById('panel-products').classList.toggle('hidden', tab !== 'products');
+        document.getElementById('panel-orders').classList.toggle('hidden', tab !== 'orders');
+        document.getElementById('panel-users').classList.toggle('hidden', tab !== 'users');
+        document.getElementById('panel-chat').classList.toggle('hidden', tab !== 'chat');
+        document.getElementById('panel-banners').classList.toggle('hidden', tab !== 'banners');
+        document.getElementById('panel-consignments').classList.toggle('hidden', tab !== 'consignments');
+
+        if (tab === 'dashboard') loadDashboard();
+        if (tab === 'orders') loadOrders();
+        if (tab === 'users') loadUsers();
+        if (tab === 'banners') loadBanners();
+        if (tab === 'consignments') loadAdminConsignments();
+        if (tab === 'chat') {
+            globalUnreadCount = 0;
+            const badge = document.getElementById('chat-badge');
+            if (badge) {
+                badge.textContent = '0';
+                badge.classList.add('hidden');
+            }
+            if (typeof loadChatUsers === 'function') loadChatUsers();
+        }
+    }
+
+    // --- โหลดหมวดหมู่ ---
+    async function loadCategories() {
+        const res = await fetch('/api/categories');
+        const json = await res.json();
+        const select = document.getElementById('p-category');
+        json.data.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c.id; opt.textContent = c.name;
+            select.appendChild(opt);
+        });
+    }
+
+    // --- โหลดสินค้า ---
+    async function loadProducts() {
+        const res = await fetch('/api/products');
+        const json = await res.json();
+        const tbody = document.getElementById('products-table');
+        if (json.data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="py-8 text-center text-gamer-lightgray/50">ยังไม่มีสินค้า</td></tr>';
+            return;
+        }
+        tbody.innerHTML = json.data.map(p => `
+            <tr class="border-b border-gamer-teal/10 hover:bg-white/5">
+                <td class="py-3 px-4"><img src="${p.image_url || ''}" class="w-12 h-12 object-contain rounded-lg bg-white/5"></td>
+                <td class="py-3 px-4 text-white font-medium max-w-[200px]"><span class="line-clamp-1">${p.name}</span></td>
+                <td class="py-3 px-4 text-gamer-teal text-xs">${p.category_name || '-'}</td>
+                <td class="py-3 px-4 text-right">
+                    <div class="text-xs text-gamer-lightgray/50">ทุน: ฿${Number(p.cost_price || 0).toLocaleString()}</div>
+                    <div class="text-white font-bold mt-1">
+                        ${p.discount_price ? `<span class="text-xs text-gamer-lightgray/50 line-through mr-1">฿${Number(p.price).toLocaleString()}</span><span class="text-gamer-cyan">฿${Number(p.discount_price).toLocaleString()}</span>` : `฿${Number(p.price).toLocaleString()}`}
+                    </div>
+                    ${p.promo_tag ? `<div class="text-[10px] text-gamer-red mt-1">${p.promo_tag}</div>` : ''}
+                </td>
+                <td class="py-3 px-4 text-center text-white font-bold text-lg">${p.stock_quantity}</td>
+                <td class="py-3 px-4 text-center">
+                    <span class="px-2 py-1 rounded-full text-xs font-bold ${p.is_active ? 'bg-green-500/10 text-green-400' : 'bg-red-500/10 text-red-400'}">
+                        ${p.is_active ? 'แสดง' : 'ซ่อน'}
+                    </span>
+                </td>
+                <td class="py-3 px-4 text-center whitespace-nowrap">
+                    <button onclick="openStockInModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="bg-gamer-teal/20 text-gamer-teal border border-gamer-teal/50 hover:bg-gamer-teal hover:text-gamer-dark px-2 py-1 rounded-lg text-xs font-bold transition-colors mr-2" title="นำเข้าสต๊อก">
+                        <i class="fa-solid fa-truck-loading"></i> รับเข้า
+                    </button>
+                    <button onclick='openEditModal(${JSON.stringify(p).replace(/'/g, "&apos;")})' class="text-gamer-cyan/70 hover:text-gamer-cyan transition-colors mr-2" title="แก้ไขสินค้า">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                    <button onclick="deleteProduct('${p.id}')" class="text-gamer-red/50 hover:text-gamer-red transition-colors" title="ลบสินค้า">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    // --- แก้ไขสินค้า ---
+    function openEditModal(p) {
+        document.getElementById('edit-modal').classList.remove('hidden');
+        document.getElementById('edit-id').value = p.id;
+        document.getElementById('edit-price').value = p.price;
+        document.getElementById('edit-cost-price').value = p.cost_price || '';
+        document.getElementById('edit-stock').value = p.stock_quantity;
+        document.getElementById('edit-discount').value = p.discount_price || '';
+    }
+
+    function closeEditModal() {
+        document.getElementById('edit-modal').classList.add('hidden');
+    }
+
+    async function submitEditProduct(e) {
+        e.preventDefault();
+        const id = document.getElementById('edit-id').value;
+        const body = {
+            price: document.getElementById('edit-price').value,
+            cost_price: document.getElementById('edit-cost-price').value || 0,
+            stock_quantity: document.getElementById('edit-stock').value,
+            discount_price: document.getElementById('edit-discount').value || null
+        };
+        const res = await fetch(`/api/products/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const json = await res.json();
+        if (json.success) {
+            showToast('แก้ไขสินค้าสำเร็จ!');
+            closeEditModal();
+            loadProducts();
+        } else {
+            alert('ข้อผิดพลาด: ' + json.message);
+        }
+    }
+
+    // --- รับเข้าสต๊อก (Stock In) ---
+    function openStockInModal(id, name) {
+        document.getElementById('stock-in-modal').classList.remove('hidden');
+        document.getElementById('stock-in-id').value = id;
+        document.getElementById('stock-in-product-name').textContent = name;
+        document.getElementById('stock-in-qty').value = 1;
+        document.getElementById('stock-in-cost').value = '';
+    }
+
+    function closeStockInModal() {
+        document.getElementById('stock-in-modal').classList.add('hidden');
+    }
+
+    async function submitStockIn(e) {
+        e.preventDefault();
+        const id = document.getElementById('stock-in-id').value;
+        const body = {
+            quantity: parseInt(document.getElementById('stock-in-qty').value),
+            cost_price: parseFloat(document.getElementById('stock-in-cost').value)
+        };
+        const res = await fetch(`/api/products/${id}/stock-in`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const json = await res.json();
+        if (json.success) {
+            showToast('รับเข้าสต๊อกสำเร็จ!');
+            closeStockInModal();
+            loadProducts();
+        } else {
+            alert('ข้อผิดพลาด: ' + json.message);
+        }
+    }
+
+    // --- เพิ่มสินค้า ---
+    document.getElementById('add-product-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        let imageUrl = '';
+        const fileInput = document.getElementById('p-image');
+        if (fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            try {
+                const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+                const uploadJson = await uploadRes.json();
+                if (uploadJson.success) {
+                    imageUrl = uploadJson.url;
+                } else {
+                    alert('อัปโหลดรูปไม่สำเร็จ: ' + uploadJson.message);
+                    return;
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการอัปโหลด: ' + err.message);
+                return;
+            }
+        }
+
+        const body = {
+            name: document.getElementById('p-name').value,
+            category_id: document.getElementById('p-category').value,
+            price: document.getElementById('p-price').value,
+            cost_price: document.getElementById('p-cost-price').value || 0,
+            condition_level: document.getElementById('p-condition').value,
+            warranty_status: document.getElementById('p-warranty').value,
+            stock_quantity: document.getElementById('p-stock').value || 1,
+            image_url: imageUrl,
+            description: document.getElementById('p-desc').value,
+            discount_price: document.getElementById('p-discount').value || null,
+            promo_tag: document.getElementById('p-tag').value || null
+        };
+        const res = await fetch('/api/products', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+        const json = await res.json();
+        if (json.success) {
+            showToast('เพิ่มสินค้าสำเร็จ!');
+            document.getElementById('add-product-form').reset();
+            loadProducts();
+        } else { alert('เกิดข้อผิดพลาด: ' + json.message); }
+    });
+
+    // --- ลบสินค้า ---
+    async function deleteProduct(id) {
+        if (!confirm('ต้องการลบสินค้านี้หรือไม่?')) return;
+        const res = await fetch(`/api/products/${id}`, { method: 'DELETE' });
+        const json = await res.json();
+        if (json.success) { showToast('ลบสินค้าสำเร็จ'); loadProducts(); }
+    }
+
+    // --- โหลดคำสั่งซื้อ (ทั้งหมด) ---
+    async function loadOrders() {
+        const list = document.getElementById('orders-list');
+        list.innerHTML = '<p class="text-center text-gamer-lightgray/50 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลด...</p>';
+        try {
+            const res = await fetch('/api/orders/all');
+            const json = await res.json();
+            if (!json.success || json.data.length === 0) {
+                list.innerHTML = '<p class="text-center text-gamer-lightgray/50 py-8">ยังไม่มีคำสั่งซื้อ</p>';
+                return;
+            }
+            list.innerHTML = json.data.map(o => `
+                <div class="bg-gamer-dark border border-gamer-teal/20 rounded-xl p-4 space-y-3">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-white font-bold">คำสั่งซื้อ #${o.id.substring(0, 8).toUpperCase()}</p>
+                            <p class="text-gamer-lightgray/50 text-xs">${new Date(o.created_at).toLocaleString('th-TH')}</p>
+                        </div>
+                        <select onchange="updateOrderStatus('${o.id}', this.value)" class="bg-gamer-gray text-white border border-gamer-teal/30 rounded px-2.5 py-1 text-xs focus:outline-none focus:border-gamer-cyan font-bold">
+                            <option value="pending" ${o.status === 'pending' ? 'selected' : ''}>⏳ รอดำเนินการ (Pending)</option>
+                            <option value="paid" ${o.status === 'paid' ? 'selected' : ''}>💵 ชำระเงินแล้ว (Paid)</option>
+                            <option value="processing" ${o.status === 'processing' ? 'selected' : ''}>📦 กำลังจัดเตรียม (Processing)</option>
+                            <option value="shipped" ${o.status === 'shipped' ? 'selected' : ''}>🚚 กำลังจัดส่ง (Shipped)</option>
+                            <option value="delivered" ${o.status === 'delivered' ? 'selected' : ''}>✅ สำเร็จ (Delivered)</option>
+                            <option value="cancelled" ${o.status === 'cancelled' ? 'selected' : ''}>❌ ยกเลิกแล้ว (Cancelled)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="bg-gamer-gray/30 p-3 rounded-lg border border-gamer-teal/10 space-y-2">
+                        <div class="text-xs text-gamer-lightgray font-bold uppercase tracking-wider">ที่อยู่จัดส่ง:</div>
+                        <div class="text-sm text-gamer-lightgray/80">${o.shipping_address ? o.shipping_address.replace(/\n/g, '<br>') : '-'}</div>
+                    </div>
+
+                    <div class="bg-gamer-gray/20 p-3 rounded-lg border border-gamer-teal/5">
+                        <div class="text-xs text-gamer-lightgray font-bold uppercase tracking-wider mb-2">รายการสินค้า:</div>
+                        <div class="space-y-1.5">
+                            ${(o.items || []).map(item => `
+                                <div class="flex justify-between text-xs text-gamer-lightgray/70">
+                                    <span>• ${item.product_name || 'ไม่พบสินค้า'} x ${item.quantity}</span>
+                                    <span class="text-white font-semibold">฿${Number(item.unit_price * item.quantity).toLocaleString()}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="flex justify-between items-center pt-2 border-t border-gamer-teal/10">
+                        <span class="text-gamer-lightgray/50 text-sm">${o.items ? o.items.length + ' รายการ' : ''}</span>
+                        <div class="flex items-center gap-3">
+                            ${o.payment_slip_url ? `<a href="${o.payment_slip_url}" target="_blank" class="text-xs bg-gamer-teal/20 text-gamer-cyan px-2 py-1 rounded hover:bg-gamer-teal/40"><i class="fa-solid fa-file-invoice"></i> ดูสลิป</a>` : ''}
+                            <span class="text-gamer-cyan font-bold text-lg">฿${Number(o.total_amount).toLocaleString()}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            list.innerHTML = '<p class="text-center text-gamer-lightgray/50 py-8">ไม่สามารถโหลดข้อมูลได้</p>';
+        }
+    }
+
+    // --- อัปเดตสถานะคำสั่งซื้อ ---
+    async function updateOrderStatus(orderId, status) {
+        try {
+            const res = await fetch(`/api/orders/${orderId}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const json = await res.json();
+            if (json.success) {
+                // showToast('อัปเดตสถานะคำสั่งซื้อสำเร็จ');
+                alert('อัปเดตสถานะคำสั่งซื้อสำเร็จ');
+                loadOrders(); // รีเฟรชตาราง
+            } else {
+                alert('อัปเดตไม่สำเร็จ');
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // ================== Banners Management ==================
+    async function loadBanners() {
+        try {
+            const res = await fetch('/api/banners?all=true');
+            const json = await res.json();
+            const table = document.getElementById('banners-table');
+            if (json.data && json.data.length > 0) {
+                table.innerHTML = json.data.map(b => `
+                    <tr class="border-b border-gamer-teal/10 hover:bg-white/5 transition-colors">
+                        <td class="py-3 px-4">
+                            <img src="${b.image_url}" class="h-16 w-32 object-cover rounded border border-gamer-teal/30">
+                        </td>
+                        <td class="py-3 px-4 text-gamer-lightgray truncate max-w-[200px]">${b.link_url || '-'}</td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="toggleBanner('${b.id}')" class="px-3 py-1 rounded text-xs font-bold ${b.is_active ? 'bg-gamer-green/20 text-gamer-green border border-gamer-green/50' : 'bg-gamer-gray text-gamer-lightgray border border-gamer-teal/30'}">
+                                ${b.is_active ? 'เปิดใช้งาน' : 'ปิดการแสดงผล'}
+                            </button>
+                        </td>
+                        <td class="py-3 px-4 text-center">
+                            <button onclick="deleteBanner('${b.id}')" class="text-gamer-red hover:text-red-400 transition-colors" title="ลบ"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                table.innerHTML = '<tr><td colspan="4" class="py-6 text-center text-gamer-lightgray/50">ยังไม่มีข้อมูลแบนเนอร์</td></tr>';
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    document.getElementById('add-banner-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('b-image').files[0];
+        const link = document.getElementById('b-link').value;
+        if (!file) return alert('กรุณาเลือกรูปภาพ');
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            // Upload image first
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: formData });
+            const uploadJson = await uploadRes.json();
+            if (!uploadJson.success) return alert(uploadJson.message);
+
+            // Add banner to DB
+            const res = await fetch('/api/banners', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ image_url: uploadJson.url, link_url: link })
+            });
+            const json = await res.json();
+            if (json.success) {
+                alert('เพิ่มแบนเนอร์สำเร็จ');
+                document.getElementById('add-banner-form').reset();
+                loadBanners();
+            } else {
+                alert(json.message);
+            }
+        } catch (err) { console.error(err); }
+    });
+
+    async function toggleBanner(id) {
+        try {
+            await fetch(`/api/banners/${id}/toggle`, { method: 'PUT' });
+            loadBanners();
+        } catch (err) { console.error(err); }
+    }
+
+    async function deleteBanner(id) {
+        if (!confirm('ยืนยันการลบแบนเนอร์นี้?')) return;
+        try {
+            await fetch(`/api/banners/${id}`, { method: 'DELETE' });
+            loadBanners();
+        } catch (err) { console.error(err); }
+    }
+
+    // ================== C2C Consignments Management ==================
+    async function loadAdminConsignments() {
+        try {
+            const res = await fetch('/api/consignments/admin/all');
+            const json = await res.json();
+            const table = document.getElementById('consignments-table');
+            if (json.data && json.data.length > 0) {
+                table.innerHTML = json.data.map(p => {
+                    let statusColor = 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20';
+                    let statusText = 'รอตรวจสอบ';
+                    if (p.status === 'approved') {
+                        statusColor = 'text-gamer-green bg-gamer-green/10 border-gamer-green/20';
+                        statusText = 'อนุมัติแล้ว';
+                    } else if (p.status === 'rejected') {
+                        statusColor = 'text-gamer-red bg-gamer-red/10 border-gamer-red/20';
+                        statusText = 'ปฏิเสธ';
+                    } else if (p.status === 'sold') {
+                        statusColor = 'text-gamer-lightgray/50 bg-gamer-lightgray/5 border-gamer-lightgray/10';
+                        statusText = 'ขายแล้ว';
+                    }
+
+                    let actionHtml = '';
+                    if (p.status === 'pending') {
+                        actionHtml = `
+                            <button onclick="updateConsignmentStatus('${p.id}', 'approved')" class="bg-gamer-green/20 text-gamer-green border border-gamer-green/50 hover:bg-gamer-green hover:text-gamer-dark px-3 py-1 rounded text-xs font-bold mr-2 transition-all">อนุมัติ</button>
+                            <button onclick="updateConsignmentStatus('${p.id}', 'rejected')" class="bg-gamer-red/20 text-gamer-red border border-gamer-red/50 hover:bg-gamer-red hover:text-white px-3 py-1 rounded text-xs font-bold transition-all">ปฏิเสธ</button>
+                        `;
+                    } else if (p.status === 'approved') {
+                        actionHtml = `
+                            <button onclick="updateConsignmentStatus('${p.id}', 'sold')" class="bg-gamer-teal/20 text-gamer-cyan border border-gamer-cyan/30 hover:bg-gamer-cyan hover:text-gamer-dark px-3 py-1 rounded text-xs font-bold transition-all">ทำเครื่องหมายขายแล้ว</button>
+                        `;
+                    } else {
+                        actionHtml = '-';
+                    }
+
+                    return `
+                        <tr class="border-b border-gamer-teal/10 hover:bg-white/5 transition-colors text-xs">
+                            <td class="py-3 px-4 flex items-center gap-3">
+                                ${p.image_url ? `<img src="${p.image_url}" class="h-10 w-10 object-cover rounded border border-gamer-teal/20">` : `<div class="h-10 w-10 bg-gamer-gray rounded border border-gamer-teal/10 flex items-center justify-center text-gamer-teal/40 text-xs font-bold"><i class="fa-solid fa-box"></i></div>`}
+                                <div>
+                                    <p class="font-bold text-white">${p.product_name}</p>
+                                    <p class="text-[10px] text-gamer-lightgray/50">${p.category_name || 'ทั่วไป'}</p>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4">
+                                <p class="text-white">${p.first_name} ${p.last_name}</p>
+                                <p class="text-[10px] text-gamer-lightgray/50">${p.email}</p>
+                            </td>
+                            <td class="py-3 px-4 text-gamer-lightgray font-mono text-xs">${p.contact_info}</td>
+                            <td class="py-3 px-4 font-bold text-white">฿${Number(p.price).toLocaleString()}</td>
+                            <td class="py-3 px-4 text-center">
+                                <span class="px-2 py-0.5 rounded-full border text-[10px] font-bold ${statusColor}">${statusText}</span>
+                            </td>
+                            <td class="py-3 px-4 text-center">${actionHtml}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                table.innerHTML = '<tr><td colspan="6" class="py-10 text-center text-gamer-lightgray/50">ไม่มีข้อมูลคำขอฝากขาย C2C</td></tr>';
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function updateConsignmentStatus(id, status) {
+        if (!confirm(`ยืนยันการทำรายการเป็น "${status}"?`)) return;
+        try {
+            const res = await fetch(`/api/consignments/admin/${id}/status`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status })
+            });
+            const json = await res.json();
+            if (json.success) {
+                showToast(`อัปเดตสถานะสำเร็จ!`);
+                loadAdminConsignments();
+            } else {
+                alert(json.message);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    // --- โหลดข้อมูลลูกค้า (Users) ---
+    async function loadUsers() {
+        const tbody = document.getElementById('users-table');
+        const summary = document.getElementById('users-summary');
+        tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gamer-lightgray/50"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลด...</td></tr>';
+        summary.textContent = '';
+        
+        try {
+            const res = await fetch('/api/users/all');
+            const json = await res.json();
+            
+            if (!json.success || json.data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gamer-lightgray/50">ยังไม่มีผู้ใช้ในระบบ</td></tr>';
+                return;
+            }
+            
+            summary.textContent = `ผู้ใช้ทั้งหมด: ${json.data.length} คน`;
+            
+            tbody.innerHTML = json.data.map(u => `
+                <tr class="border-b border-gamer-teal/10 hover:bg-white/5">
+                    <td class="py-3 px-4 text-white font-medium">
+                        ${u.first_name || ''} ${u.last_name || ''}
+                        ${u.role === 'admin' ? '<span class="bg-gamer-red text-white text-[10px] font-bold px-1.5 py-0.5 rounded ml-2">ADMIN</span>' : ''}
+                    </td>
+                    <td class="py-3 px-4 text-gamer-teal">${u.email}</td>
+                    <td class="py-3 px-4 text-center text-gamer-lightgray/70">${new Date(u.created_at).toLocaleDateString('th-TH')}</td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="px-2 py-1 rounded-full text-xs font-bold ${u.total_orders > 0 ? 'bg-gamer-cyan/10 text-gamer-cyan' : 'bg-gray-500/10 text-gray-400'}">
+                            ${u.total_orders} ครั้ง
+                        </span>
+                    </td>
+                    <td class="py-3 px-4 text-right text-white font-bold">฿${Number(u.total_spent).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        } catch (err) {
+            tbody.innerHTML = '<tr><td colspan="5" class="py-8 text-center text-gamer-red/50">ไม่สามารถโหลดข้อมูลผู้ใช้ได้</td></tr>';
+        }
+    }
+
+    // --- โหลดแดชบอร์ด (Dashboard) ---
+    let salesChartInstance = null;
+    let topProductsChartInstance = null;
+
+    async function loadDashboard() {
+        try {
+            const res = await fetch('/api/admin/analytics');
+            const json = await res.json();
+            if (!json.success) return;
+
+            const { summary, salesByDay, topProducts } = json.data;
+
+            // อัปเดต Summary
+            document.getElementById('dash-revenue').textContent = '฿' + Number(summary.totalRevenue).toLocaleString();
+            document.getElementById('dash-orders').textContent = summary.totalOrders;
+            document.getElementById('dash-users').textContent = summary.totalUsers;
+
+            // สร้างกราฟยอดขาย
+            const ctxSales = document.getElementById('salesChart').getContext('2d');
+            if (salesChartInstance) salesChartInstance.destroy();
+            salesChartInstance = new Chart(ctxSales, {
+                type: 'line',
+                data: {
+                    labels: salesByDay.map(d => new Date(d.date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' })),
+                    datasets: [{
+                        label: 'ยอดขาย (บาท)',
+                        data: salesByDay.map(d => d.revenue),
+                        borderColor: '#66FCF1',
+                        backgroundColor: 'rgba(102, 252, 241, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#C5C6C7' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#C5C6C7' } }
+                    }
+                }
+            });
+
+            // สร้างกราฟสินค้าขายดี
+            const ctxTop = document.getElementById('topProductsChart').getContext('2d');
+            if (topProductsChartInstance) topProductsChartInstance.destroy();
+            topProductsChartInstance = new Chart(ctxTop, {
+                type: 'bar',
+                data: {
+                    labels: topProducts.map(p => p.name.length > 20 ? p.name.substring(0, 20) + '...' : p.name),
+                    datasets: [{
+                        label: 'จำนวนที่ขายได้',
+                        data: topProducts.map(p => p.sold_qty),
+                        backgroundColor: '#45A29E',
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#C5C6C7', stepSize: 1 } },
+                        x: { grid: { display: false }, ticks: { color: '#C5C6C7' } }
+                    }
+                }
+            });
+
+        } catch (err) {
+            console.error('Error loading dashboard:', err);
+        }
+    }
+
+    // --- Live Chat Logic (Admin) ---
+    let activeChatUser = null; // userId
+    const chatUsers = {}; // { userId: { name, messages: [], unreadCount: 0, online: false } }
+
+    function updateBadges() {
+        globalUnreadCount = Object.values(chatUsers).reduce((sum, u) => sum + (u.unreadCount || 0), 0);
+        const badge = document.getElementById('chat-badge');
+        if (badge) {
+            if (globalUnreadCount > 0) {
+                badge.textContent = globalUnreadCount;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+    }
+
+    async function loadChatUsers() {
+        try {
+            const res = await fetch('/api/chat/users');
+            const json = await res.json();
+            if (json.success) {
+                json.data.forEach(u => {
+                    if (!chatUsers[u.user_id]) {
+                        chatUsers[u.user_id] = { name: u.name, messages: [], unreadCount: 0, online: false };
+                    } else {
+                        chatUsers[u.user_id].name = u.name;
+                    }
+                });
+                renderChatUsers();
+            }
+        } catch (err) {
+            console.error('Error loading chat users:', err);
+        }
+    }
+
+    function initAdminChat() {
+        if (typeof io === 'undefined') return;
+        const socket = io();
+
+        socket.emit('join_admin');
+
+        // เมื่อผู้ใช้ออนไลน์
+        socket.on('user_online', (data) => {
+            const { userId, name } = data;
+            if (!chatUsers[userId]) {
+                chatUsers[userId] = { name, messages: [], unreadCount: 0, online: true };
+            } else {
+                chatUsers[userId].online = true;
+            }
+            renderChatUsers();
+        });
+
+        // เมื่อผู้ใช้ออฟไลน์
+        socket.on('user_offline', (data) => {
+            const { userId } = data;
+            if (chatUsers[userId]) {
+                chatUsers[userId].online = false;
+            }
+            renderChatUsers();
+        });
+
+        // เมื่อมีข้อความใหม่เข้ามา
+        socket.on('new_user_message', (data) => {
+            const { userId, text, name, time } = data;
+            
+            if (!chatUsers[userId]) {
+                chatUsers[userId] = { name, messages: [], unreadCount: 0, online: true };
+            }
+            
+            chatUsers[userId].messages.push({ sender: 'user', text, time });
+            
+            const isChatTabHidden = document.getElementById('panel-chat').classList.contains('hidden');
+            const isInactiveChat = activeChatUser !== userId;
+            
+            if (isInactiveChat || isChatTabHidden) {
+                chatUsers[userId].unreadCount = (chatUsers[userId].unreadCount || 0) + 1;
+                updateBadges();
+                
+                showToast(`💬 ข้อความใหม่จากคุณ ${name}: "${text}"`);
+                
+                if (typeof playSuccessSound === 'function') {
+                    playSuccessSound();
+                }
+            } else {
+                if (typeof playHoverSound === 'function') {
+                    playHoverSound();
+                }
+            }
+            
+            renderChatUsers();
+            
+            if (activeChatUser === userId) {
+                renderChatMessages();
+            }
+        });
+
+        socket.on('low_stock_alert', (data) => {
+            alert(`⚠️ แจ้งเตือนสต๊อกต่ำ!\nสินค้า: ${data.product_name}\nเหลือเพียง: ${data.stock_quantity} ชิ้น`);
+            showToast(`แจ้งเตือน: ${data.product_name} ใกล้หมดแล้ว!`);
+        });
+
+        window.sendAdminReply = () => {
+            if (!activeChatUser) return;
+            const input = document.getElementById('admin-chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            socket.emit('admin_reply', { toUserId: activeChatUser, text });
+            
+            chatUsers[activeChatUser].messages.push({ sender: 'admin', text, time: new Date() });
+            input.value = '';
+            renderChatMessages();
+        };
+
+        document.getElementById('admin-chat-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendAdminReply();
+            }
+        });
+
+        window.selectChatUser = async (userId) => {
+            activeChatUser = userId;
+            if (chatUsers[userId]) {
+                chatUsers[userId].unreadCount = 0;
+            }
+            updateBadges();
+            
+            document.getElementById('admin-chat-input').disabled = false;
+            document.getElementById('admin-chat-send-btn').disabled = false;
+
+            // โหลดประวัติแชทลูกค้าจาก API
+            const messagesContainer = document.getElementById('admin-chat-messages');
+            messagesContainer.innerHTML = '<p class="text-gamer-lightgray/50 text-center text-xs my-4">กำลังโหลดประวัติแชท...</p>';
+            try {
+                const res = await fetch(`/api/chat/history-admin/${userId}`);
+                const json = await res.json();
+                if (json.success) {
+                    chatUsers[userId].messages = json.data.map(m => ({
+                        sender: m.sender_type,
+                        text: m.message,
+                        time: m.created_at
+                    }));
+                }
+            } catch (err) {
+                console.error('Error fetching chat history:', err);
+            }
+            
+            renderChatUsers();
+            renderChatMessages();
+        };
+
+        function renderChatUsers() {
+            const container = document.getElementById('admin-chat-users');
+            if (Object.keys(chatUsers).length === 0) {
+                container.innerHTML = '<p class="text-gamer-lightgray/50 text-center text-sm mt-4">ไม่มีแชทที่กำลังสนทนา</p>';
+                return;
+            }
+            container.innerHTML = Object.keys(chatUsers).map(uid => {
+                const u = chatUsers[uid];
+                const unreadBadge = u.unreadCount > 0 
+                    ? `<span class="bg-gamer-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full ml-auto animate-pulse">${u.unreadCount}</span>` 
+                    : '';
+                const onlineDot = u.online 
+                    ? `<span class="w-2.5 h-2.5 rounded-full bg-green-500 inline-block mr-2" title="ออนไลน์"></span>` 
+                    : `<span class="w-2.5 h-2.5 rounded-full bg-gray-500 inline-block mr-2" title="ออฟไลน์"></span>`;
+                return `
+                    <div id="chat-user-${uid}" onclick="selectChatUser('${uid}')" class="p-3 rounded-xl cursor-pointer transition-colors border-2 flex items-center justify-between ${activeChatUser === uid ? 'bg-gamer-teal/20 border-gamer-teal' : 'bg-gamer-gray border-transparent hover:bg-gamer-teal/10'}">
+                        <p class="text-white font-bold text-sm truncate flex-grow flex items-center">
+                            ${onlineDot}
+                            <span class="truncate">${u.name}</span>
+                        </p>
+                        ${unreadBadge}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('admin-chat-messages');
+            if (!activeChatUser || !chatUsers[activeChatUser]) return;
+            
+            const msgs = chatUsers[activeChatUser].messages;
+            container.innerHTML = msgs.map(m => {
+                if (m.sender === 'system') return `<p class="text-gamer-lightgray/50 text-center text-xs my-2">${m.text}</p>`;
+                const isMe = m.sender === 'admin';
+                return `
+                    <div class="${isMe ? 'bg-gamer-teal/20 text-white self-end ml-auto rounded-tr-none border-gamer-teal/30' : 'bg-gamer-cyan/10 text-white self-start mr-auto rounded-tl-none border-gamer-cyan/30'} text-sm p-3 rounded-xl max-w-[85%] border w-fit mb-2">
+                        ${m.text}
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+    }
+
+    loadCategories();
+    loadProducts();
+    
+    // Default Tab
+    showTab('dashboard');
+    </script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        // Init chat only after socket.io is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initAdminChat, 500);
+        });
+    </script>
+    <script src="/theme.js"></script>
+<script src="/mobile-nav.js"></script>
+<script src="/audio.js"></script>
+</body>
+</html>
