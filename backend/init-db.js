@@ -1,4 +1,5 @@
 // init-db.js - เริ่มต้นฐานข้อมูลแบบรองรับทั้ง SQLite และ PostgreSQL
+require('dotenv').config();
 const pool = require('./db');
 const fs = require('fs');
 const path = require('path');
@@ -16,15 +17,20 @@ async function init() {
         
         console.log(`📦 รัน Schema จากไฟล์ ${schemaFile}...`);
         
-        // แยกคำสั่ง SQL ด้วยเซมิโคลอน (;) และกรองบรรทัดว่างออก เพื่อรันทีละคำสั่ง (ป้องกันปัญหาบางระบบไม่รัน Batch)
-        // สำหรับ Postgres เราสามารถส่งรันรวดเดียวได้ แต่สปิลต์เพื่อความปลอดภัย
         const statements = schema
             .split(';')
             .map(s => s.trim())
-            .filter(s => s.length > 0 && !s.startsWith('--'));
+            .filter(s => s.length > 0);
 
         for (const statement of statements) {
-            await pool.query(statement);
+            try {
+                console.log(`⏳ รัน SQL: ${statement.substring(0, 50).replace(/\n/g, ' ')}...`);
+                await pool.query(statement);
+            } catch (stmtErr) {
+                console.error(`❌ ข้อผิดพลาดในคำสั่ง SQL:`, statement);
+                console.error(`รายละเอียด:`, stmtErr.message);
+                throw stmtErr;
+            }
         }
         console.log('✅ สร้างตารางสำเร็จ');
 
