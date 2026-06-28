@@ -1,7 +1,7 @@
 # Render Blueprint Specification for LX Shop
 services:
   - type: web
-    name: lx-shop
+    name: lx-shop-2hand
     env: node
     plan: free
     rootDir: backend
