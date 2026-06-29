@@ -814,8 +814,6 @@
                     if (data.case) builderState['case'].product = data.case;
                     
                     renderBuilder();
-                    checkCompatibility();
-                    updateSummary();
                     showToast('🤖 AI ได้จัดสเปคอะไหล่ที่เหมาะสมที่สุดให้คุณแล้ว!');
                 } else {
                     alert('AI แนะนำสเปคไม่สำเร็จ: ' + json.message);
