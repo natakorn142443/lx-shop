@@ -120,7 +120,7 @@
 
     <!-- Dynamic Banners Section -->
     <section id="dynamic-banners-section" class="hidden relative w-full overflow-hidden bg-gamer-dark">
-        <div id="banner-slider" class="flex transition-transform duration-500 ease-in-out h-[300px] sm:h-[400px] md:h-[500px]">
+        <div id="banner-slider" class="flex transition-transform duration-500 ease-in-out items-center">
             <!-- Banners will be injected here -->
         </div>
         <button onclick="prevBanner()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full hover:bg-gamer-cyan hover:text-gamer-dark flex items-center justify-center transition-all z-10"><i class="fa-solid fa-chevron-left"></i></button>
@@ -1055,9 +1055,9 @@
         const dots = document.getElementById('banner-dots');
         
         slider.innerHTML = banners.map(b => `
-            <div class="min-w-full h-full cursor-pointer flex-shrink-0 relative group" onclick="${b.link_url ? `window.location.href='${b.link_url}'` : ''}">
-                <img src="${b.image_url}" class="w-full h-full object-cover" alt="Banner">
-                <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors"></div>
+            <div class="min-w-full cursor-pointer flex-shrink-0 relative group bg-gamer-dark flex justify-center items-center" onclick="${b.link_url ? `window.location.href='${b.link_url}'` : ''}">
+                <img src="${b.image_url}" class="w-full max-h-[600px] object-contain" alt="Banner">
+                <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none"></div>
             </div>
         `).join('');
 
