@@ -363,7 +363,7 @@
     async function checkWishlist() {
         if (!user || !currentProduct) return;
         try {
-            const res = await fetch(`/api/wishlists/${user.id}/check/${currentProduct.id}`);
+            const res = await fetch(`/api/wishlists/user/${user.id}/check/${currentProduct.id}`);
             const json = await res.json();
             const icon = document.querySelector('#btn-wishlist i');
             if (json.is_wished) {

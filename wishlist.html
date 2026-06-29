@@ -112,7 +112,7 @@
         async function loadWishlist() {
             const container = document.getElementById('wishlist-container');
             try {
-                const res = await fetch(`/api/wishlists/${user.id}`);
+                const res = await fetch(`/api/wishlists/user/${user.id}`);
                 const json = await res.json();
 
                 if (!json.success || json.data.length === 0) {
