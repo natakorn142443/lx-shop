@@ -164,6 +164,21 @@
             window.location.href = '/login.html';
         }
 
+        // หากเป็นแอดมิน แสดงปุ่มสำหรับเข้าหน้าหลังบ้านเพิ่มเติมในเมนู
+        if (user && user.role === 'admin') {
+            const navFlex = document.querySelector('nav .flex.items-center.gap-6');
+            if (navFlex) {
+                const logoutBtn = navFlex.querySelector('button[onclick="logout()"]');
+                if (logoutBtn) {
+                    logoutBtn.insertAdjacentHTML('beforebegin', `
+                        <a href="/admin.html" class="text-gamer-cyan hover:text-white text-sm flex items-center gap-1 border border-gamer-cyan/30 px-3 py-1 rounded-lg hover:bg-gamer-cyan hover:text-gamer-dark transition-colors mr-2">
+                            <i class="fa-solid fa-user-shield"></i> จัดการหลังบ้าน
+                        </a>
+                    `);
+                }
+            }
+        }
+
         // Initialize User Info
         document.getElementById('user-name').textContent = `${user.first_name || ''} ${user.last_name || ''}`;
         document.getElementById('user-email').textContent = user.email;

@@ -297,7 +297,16 @@
             const loginLink = userNameSpan.closest('a');
             if (loginLink) {
                 loginLink.href = '/profile.html';
+                let adminBtnHtml = '';
+                if (user.role === 'admin') {
+                    adminBtnHtml = `
+                        <a href="/admin.html" class="hidden sm:flex text-gamer-cyan hover:text-white transition-colors items-center gap-2 text-sm font-medium ml-4 border border-gamer-cyan/30 px-3 py-1 rounded-lg hover:bg-gamer-cyan hover:text-gamer-dark">
+                            <i class="fa-solid fa-user-shield"></i> จัดการหลังบ้าน
+                        </a>
+                    `;
+                }
                 loginLink.insertAdjacentHTML('afterend', `
+                    ${adminBtnHtml}
                     <button onclick="logout()" class="hidden sm:flex text-gamer-red hover:text-white transition-colors items-center gap-2 text-sm font-medium ml-4 border border-gamer-red/30 px-3 py-1 rounded-lg hover:bg-gamer-red hover:border-gamer-red">
                         <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
                     </button>
