@@ -181,78 +181,71 @@ router.post('/ai-recommend-spec', async (req, res) => {
        WHERE p.is_active = TRUE`
     );
 
-    // แยกประเภทสินค้า
-    const cpus = products.filter(p => p.category_name && p.category_name.includes('ซีพียู'));
-    const mbs = products.filter(p => p.category_name && p.category_name.includes('เมนบอร์ด'));
-    const rams = products.filter(p => p.category_name && p.category_name.includes('แรม'));
-    const gpus = products.filter(p => p.category_name && p.category_name.includes('การ์ดจอ'));
+    // แยกประเภทสินค้าและเรียงจากถูกไปแพง
+    const getItems = (keyword) => products
+      .filter(p => p.category_name && p.category_name.includes(keyword))
+      .sort((a,b) => (parseFloat(a.discount_price || a.price) - parseFloat(b.discount_price || b.price)));
 
-    // Fallbacks สินค้าที่ยังไม่มีในฐานข้อมูล
-    const fallbackStorage = { id: 'fb-storage', name: 'Kingston NV2 1TB M.2 NVMe SSD', price: 2190, category_name: 'ที่เก็บข้อมูล (Storage)', image_url: 'https://images.unsplash.com/photo-1597852074816-d933c7d2b988?w=200' };
-    const fallbackPsu = { id: 'fb-psu', name: 'MSI MAG A650BN 650W 80 Plus Bronze', price: 1850, category_name: 'พาวเวอร์ซัพพลาย (PSU)', spec_wattage: 650, image_url: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=200' };
-    const fallbackCase = { id: 'fb-case', name: 'Montech Air 903 Base Black ATX Case', price: 1450, category_name: 'เคส (Case)', image_url: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200' };
+    const cpus = getItems('ซีพียู');
+    const mbs = getItems('เมนบอร์ด');
+    const rams = getItems('แรม');
+    const gpus = getItems('การ์ดจอ');
+    const storages = getItems('เก็บข้อมูล');
+    const psus = getItems('พาวเวอร์');
+    const cases = getItems('เคส');
 
-    let bestCombination = null;
-    let bestTotal = 0;
+    let spec = { cpu: null, mb: null, ram: null, gpu: null, storage: null, psu: null, case: null, totalPrice: 0 };
+    
+    // เลือกชิ้นที่ถูกที่สุดเป็นค่าเริ่มต้น (ถ้ามีของ)
+    if (cpus.length > 0) spec.cpu = cpus[0];
+    if (mbs.length > 0) {
+      spec.mb = mbs.find(m => !spec.cpu || !m.spec_socket || !spec.cpu.spec_socket || m.spec_socket === spec.cpu.spec_socket) || mbs[0];
+    }
+    if (rams.length > 0) spec.ram = rams[0];
+    if (gpus.length > 0) spec.gpu = gpus[0];
+    if (storages.length > 0) spec.storage = storages[0];
+    if (psus.length > 0) spec.psu = psus[0];
+    if (cases.length > 0) spec.case = cases[0];
 
-    // หาชุดคอมพิวเตอร์ที่เข้ากันได้และให้ผลรวมใกล้เคียงงบที่สุด
-    for (const cpu of cpus) {
-      for (const mb of mbs) {
-        // เช็คการเข้ากันได้ของ Socket
-        if (cpu.spec_socket && mb.spec_socket && cpu.spec_socket !== mb.spec_socket) {
-          continue;
-        }
-        for (const ram of rams) {
-          for (const gpu of gpus) {
-            const total = (parseFloat(cpu.price) || 0) + 
-                          (parseFloat(mb.price) || 0) + 
-                          (parseFloat(ram.price) || 0) + 
-                          (parseFloat(gpu.price) || 0) +
-                          fallbackStorage.price + 
-                          fallbackPsu.price + 
-                          fallbackCase.price;
-
-            if (total <= budgetLimit && total > bestTotal) {
-              bestTotal = total;
-              bestCombination = {
-                cpu,
-                mb,
-                ram,
-                gpu,
-                storage: fallbackStorage,
-                psu: fallbackPsu,
-                case: fallbackCase,
-                totalPrice: total
-              };
-            }
+    const calcTotal = (s) => Object.values(s).reduce((sum, item) => sum + (item && item.price ? parseFloat(item.discount_price || item.price) : 0), 0);
+    
+    let currentTotal = calcTotal(spec);
+    
+    // อัพเกรดชิ้นส่วนถ้ายังมีงบเหลือ
+    const upgrade = (category, items) => {
+       if (items.length <= 1 || !spec[category]) return;
+       for (let i = items.length - 1; i >= 0; i--) {
+          const item = items[i];
+          // ข้ามเมนบอร์ดที่ซ็อกเก็ตไม่ตรงกัน
+          if (category === 'mb' && spec.cpu && item.spec_socket && spec.cpu.spec_socket && item.spec_socket !== spec.cpu.spec_socket) continue;
+          
+          const priceDiff = parseFloat(item.discount_price || item.price) - parseFloat(spec[category].discount_price || spec[category].price);
+          if (priceDiff > 0 && currentTotal + priceDiff <= budgetLimit) {
+             spec[category] = item;
+             currentTotal += priceDiff;
+             break; // อัพเกรดไปตัวที่แรงที่สุดเท่าที่งบถึง
           }
-        }
-      }
+       }
+    };
+
+    // จัดลำดับการอัพเกรดตาม Focus
+    if (focus === 'gaming') {
+       upgrade('gpu', gpus);
+       upgrade('cpu', cpus);
+       upgrade('ram', rams);
+    } else {
+       upgrade('cpu', cpus);
+       upgrade('ram', rams);
+       upgrade('gpu', gpus);
     }
+    upgrade('storage', storages);
+    upgrade('mb', mbs);
+    upgrade('psu', psus);
+    upgrade('case', cases);
 
-    // หากไม่พบชุดประกอบในงบ ให้สเปคที่ถูกที่สุด
-    if (!bestCombination) {
-      const cheapestCpu = cpus.sort((a,b) => a.price - b.price)[0] || { id: 'fb-cpu', name: 'AMD Ryzen 5 3600', price: 2500, spec_socket: 'AM4', category_name: 'ซีพียู', image_url: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=200' };
-      const cheapestMb = mbs.filter(m => !m.spec_socket || !cheapestCpu.spec_socket || m.spec_socket === cheapestCpu.spec_socket).sort((a,b) => a.price - b.price)[0] || { id: 'fb-mb', name: 'Gigabyte A520M S2H', price: 1990, spec_socket: 'AM4', category_name: 'เมนบอร์ด', image_url: 'https://images.unsplash.com/photo-1587202372775-e229f172b9d7?w=200' };
-      const cheapestRam = rams.sort((a,b) => a.price - b.price)[0] || { id: 'fb-ram', name: 'Hiksemi DDR4 16GB (8GBx2) 3200MHz', price: 1350, category_name: 'แรม', image_url: 'https://images.unsplash.com/photo-1597852074816-d933c7d2b988?w=200' };
-      const cheapestGpu = gpus.sort((a,b) => a.price - b.price)[0] || { id: 'fb-gpu', name: 'NVIDIA GTX 1650 4GB', price: 2800, category_name: 'การ์ดจอ', image_url: 'https://images.unsplash.com/photo-1591488320449-011701bb6704?w=200' };
+    spec.totalPrice = calcTotal(spec);
 
-      const total = cheapestCpu.price + cheapestMb.price + cheapestRam.price + cheapestGpu.price + 
-                    fallbackStorage.price + fallbackPsu.price + fallbackCase.price;
-
-      bestCombination = {
-        cpu: cheapestCpu,
-        mb: cheapestMb,
-        ram: cheapestRam,
-        gpu: cheapestGpu,
-        storage: fallbackStorage,
-        psu: fallbackPsu,
-        case: fallbackCase,
-        totalPrice: total
-      };
-    }
-
-    res.json({ success: true, data: bestCombination });
+    res.json({ success: true, data: spec });
   } catch (err) {
     console.error('AI Spec recommendation error:', err);
     res.status(500).json({ success: false, message: 'การคำนวณจัดสเปคของ AI ล้มเหลว' });
