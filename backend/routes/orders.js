@@ -36,7 +36,7 @@ router.post('/', async (req, res) => {
         let discountApplied = 0;
         if (promo_code) {
             const promoResult = await client.query(
-                'SELECT * FROM promo_codes WHERE code = $1 AND is_active = 1',
+                'SELECT * FROM promo_codes WHERE code = $1 AND is_active = TRUE',
                 [promo_code]
             );
 
@@ -322,7 +322,7 @@ router.post('/validate-code', async (req, res) => {
         }
 
         const result = await pool.query(
-            'SELECT * FROM promo_codes WHERE code = $1 AND is_active = 1',
+            'SELECT * FROM promo_codes WHERE code = $1 AND is_active = TRUE',
             [code]
         );
 

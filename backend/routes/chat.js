@@ -62,7 +62,7 @@ router.post('/ai', async (req, res) => {
         const { rows: products } = await pool.query(
             `SELECT p.name, p.price, p.condition_level, p.warranty_status 
              FROM products p 
-             WHERE p.is_active = 1 AND p.stock_quantity > 0`
+             WHERE p.is_active = TRUE AND p.stock_quantity > 0`
         );
         const productContext = products.map(p => `- ${p.name} ราคา ฿${p.price.toLocaleString()} (สภาพ: ${p.condition_level || 'N/A'}, ประกัน: ${p.warranty_status || 'N/A'})`).join('\n');
 

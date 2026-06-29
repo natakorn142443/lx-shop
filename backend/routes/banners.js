@@ -7,7 +7,7 @@ const { adminMiddleware } = require('../auth');
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT * FROM banners WHERE is_active = 1 ORDER BY sort_order ASC'
+      'SELECT * FROM banners WHERE is_active = TRUE ORDER BY sort_order ASC'
     );
     res.json({ success: true, data: rows });
   } catch (err) {
@@ -44,7 +44,7 @@ router.post('/', adminMiddleware, async (req, res) => {
       `INSERT INTO banners (image_url, link_url, is_active, sort_order, created_at)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [image_url, link_url || null, is_active !== undefined ? is_active : 1, sort_order || 0, now]
+      [image_url, link_url || null, is_active !== undefined ? (is_active === true || is_active === 1 || is_active === '1' || is_active === 'true') : true, sort_order || 0, now]
     );
 
     res.status(201).json({ success: true, data: rows[0] });
@@ -63,7 +63,7 @@ router.put('/:id', adminMiddleware, async (req, res) => {
       `UPDATE banners SET image_url = $1, link_url = $2, is_active = $3, sort_order = $4
        WHERE id = $5
        RETURNING *`,
-      [image_url, link_url, is_active, sort_order, req.params.id]
+      [image_url, link_url, is_active !== undefined ? (is_active === true || is_active === 1 || is_active === '1' || is_active === 'true') : true, sort_order, req.params.id]
     );
 
     if (rowCount === 0) {

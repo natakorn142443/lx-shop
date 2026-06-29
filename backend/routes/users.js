@@ -392,7 +392,7 @@ router.post('/redeem-coupon', authMiddleware, async (req, res) => {
         // เพิ่มคูปองลงตาราง promo_codes
         await pool.query(
             'INSERT INTO promo_codes (id, code, discount_amount, discount_type, is_active) VALUES ($1, $2, $3, $4, $5)',
-            [couponId, couponCode, discountAmount, 'fixed', 1]
+            [couponId, couponCode, discountAmount, 'fixed', true]
         );
 
         // หักคะแนนผู้ใช้

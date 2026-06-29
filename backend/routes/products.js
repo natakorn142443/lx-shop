@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
       SELECT p.*, c.name AS category_name
       FROM products p
       LEFT JOIN categories c ON p.category_id = c.id
-      WHERE p.is_active = 1
+      WHERE p.is_active = TRUE
     `;
     const params = [];
     let paramIndex = 1;
@@ -97,7 +97,7 @@ router.post('/', adminMiddleware, async (req, res) => {
         id, category_id, name, description, price, discount_price || null, promo_tag || null,
         condition_level || null, warranty_status || null, stock_quantity || 0, cost_price || null,
         image_url || null, spec_socket || null, spec_wattage || null,
-        is_active !== undefined ? is_active : 1, now, now
+        is_active !== undefined ? (is_active === true || is_active === 1 || is_active === '1' || is_active === 'true') : true, now, now
       ]
     );
 
@@ -131,7 +131,7 @@ router.put('/:id', adminMiddleware, async (req, res) => {
       [
         category_id, name, description, price, discount_price, promo_tag,
         condition_level, warranty_status, stock_quantity, cost_price,
-        image_url, spec_socket, spec_wattage, is_active, now, req.params.id
+        image_url, spec_socket, spec_wattage, is_active !== undefined ? (is_active === true || is_active === 1 || is_active === '1' || is_active === 'true') : true, now, req.params.id
       ]
     );
 
@@ -152,7 +152,7 @@ router.delete('/:id', adminMiddleware, async (req, res) => {
     const now = new Date().toISOString();
 
     const { rowCount } = await pool.query(
-      `UPDATE products SET is_active = 0, updated_at = $1 WHERE id = $2`,
+      `UPDATE products SET is_active = FALSE, updated_at = $1 WHERE id = $2`,
       [now, req.params.id]
     );
 
@@ -178,7 +178,7 @@ router.post('/ai-recommend-spec', async (req, res) => {
       `SELECT p.*, c.name AS category_name 
        FROM products p 
        LEFT JOIN categories c ON p.category_id = c.id 
-       WHERE p.is_active = 1`
+       WHERE p.is_active = TRUE`
     );
 
     // แยกประเภทสินค้า
