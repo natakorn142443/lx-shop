@@ -315,6 +315,22 @@
         }
     }
 
+    // Sync User Role dynamically from database
+    if (user && user.id) {
+        fetch(`/api/users/${user.id}`)
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && json.data) {
+                    if (json.data.role !== user.role) {
+                        const updatedUser = { ...user, role: json.data.role };
+                        localStorage.setItem('lx_user', JSON.stringify(updatedUser));
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(console.error);
+    }
+
     window.logout = function() {
         localStorage.removeItem('lx_user');
         window.location.reload();

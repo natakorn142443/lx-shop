@@ -190,6 +190,15 @@
                 const json = await res.json();
                 if (json.success) {
                     document.getElementById('user-points').textContent = Number(json.data.points || 0).toLocaleString();
+                    
+                    // ซิงค์ข้อมูลสิทธิ์และคะแนนล่าสุดจากฐานข้อมูลลงในเบราว์เซอร์
+                    const updatedUser = { ...user, ...json.data };
+                    localStorage.setItem('lx_user', JSON.stringify(updatedUser));
+                    
+                    // หากตรวจพบว่าสิทธิ์เปลี่ยนเป็น admin ให้โหลดหน้าใหม่เพื่อแสดงปุ่ม
+                    if (json.data.role === 'admin' && user.role !== 'admin') {
+                        window.location.reload();
+                    }
                 }
             } catch (err) { console.error(err); }
         }
