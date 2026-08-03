@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LX Shop - ตลาดไอทีและเกมมิ่งเกียร์มือสองพรีเมียม</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        gamer: {
+                            dark: '#070A0F',
+                            gray: '#0F1420',
+                            lightgray: '#94A3B8',
+                            cyan: '#00F0FF',
+                            teal: '#3B82F6',
+                            purple: '#8B5CF6',
+                            red: '#FF3366'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Prompt', 'sans-serif'],
+                        gaming: ['Prompt', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body { font-family: 'IBM Plex Sans Thai', sans-serif; background-color: #070A0F; }
+        .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #070A0F; }
+        ::-webkit-scrollbar-thumb { background: #1E293B; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #00F0FF; }
+        
+        .bg-cyber-grid {
+            background-size: 40px 40px;
+            background-image: 
+                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-gamer-dark text-slate-300 min-h-screen flex flex-col antialiased">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-[#070A0F]/80 backdrop-blur-xl border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <!-- Brand Logo -->
+                <a href="/" class="flex-shrink-0 flex items-center gap-3 cursor-pointer group">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#00F0FF] via-[#3B82F6] to-[#8B5CF6] p-0.5 shadow-[0_0_15px_rgba(0,240,255,0.3)] group-hover:shadow-[0_0_25px_rgba(0,240,255,0.6)] transition-all">
+                        <div class="w-full h-full bg-[#070A0F] rounded-[10px] flex items-center justify-center">
+                            <i class="fa-solid fa-microchip text-[#00F0FF] text-xl group-hover:rotate-12 transition-transform"></i>
+                        </div>
+                    </div>
+                    <span class="font-gaming text-2xl font-bold text-white tracking-wider">LX<span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] to-[#3B82F6]">SHOP</span></span>
+                </a>
+                
+                <!-- Nav Links -->
+                <div class="hidden lg:flex items-center gap-6 ml-8 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                    <a href="/pc-builder.html" class="hover:text-[#00F0FF] transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-calculator text-xs text-[#00F0FF]"></i> จัดสเปคคอม
+                    </a>
+                    <!-- <a href="/market.html" class="hover:text-[#00F0FF] transition-colors flex items-center gap-2">
+                        <i class="fa-solid fa-store text-xs text-[#8B5CF6]"></i> ตลาดฝากขาย C2C
+                    </a> -->
+                </div>
+
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-xl mx-8 hidden md:block">
+                    <div class="relative group">
+                        <input id="search-input" type="text" placeholder="ค้นหา RTX 4090, Ryzen 9, Notebook..." autocomplete="off"
+                            class="w-full bg-white/5 backdrop-blur-md text-white border border-white/10 rounded-full py-2.5 pl-5 pr-12 focus:outline-none focus:border-[#00F0FF] focus:bg-white/10 focus:shadow-[0_0_20px_rgba(0,240,255,0.2)] transition-all placeholder:text-slate-500 text-sm">
+                        <button onclick="searchProducts()" class="absolute right-4 top-2.5 text-slate-400 group-focus-within:text-[#00F0FF] hover:text-[#00F0FF] transition-colors">
+                            <i class="fa-solid fa-search"></i>
+                        </button>
+                        <!-- Autocomplete Dropdown -->
+                        <div id="search-dropdown" class="absolute w-full mt-2 bg-[#0F1420]/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.9)] overflow-hidden z-50 hidden max-h-[300px] overflow-y-auto">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- User & Actions -->
+                <div class="flex items-center gap-4">
+                    <button class="theme-toggle text-slate-400 hover:text-[#00F0FF] transition-colors text-lg w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5" title="สลับโหมดหน้าจอ">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+
+                    <a href="/login.html" class="hidden sm:flex bg-white/5 hover:bg-white/10 border border-white/10 text-slate-200 hover:text-white px-4 py-2 rounded-full transition-all items-center gap-2 text-xs font-semibold">
+                        <i class="fa-regular fa-user text-sm text-[#00F0FF]"></i>
+                        <span id="user-name">เข้าสู่ระบบ</span>
+                    </a>
+
+                    <a href="/cart.html" class="relative text-slate-300 hover:text-[#00F0FF] transition-colors w-10 h-10 rounded-full flex items-center justify-center hover:bg-white/5 group">
+                        <i class="fa-solid fa-cart-shopping text-xl group-hover:scale-110 transition-transform"></i>
+                        <span id="cart-count" class="absolute -top-1 -right-1 bg-gradient-to-r from-[#00F0FF] to-[#3B82F6] text-[#070A0F] text-[10px] font-extrabold px-1.5 py-0.5 rounded-full border border-[#070A0F]">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative bg-cyber-grid overflow-hidden min-h-[580px] flex items-center">
+        <!-- Ambient Mesh Lighting (Cyan & Purple Blobs) -->
+        <div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-[#00F0FF]/10 rounded-full blur-[140px] pointer-events-none animate-pulse"></div>
+        <div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-[#8B5CF6]/15 rounded-full blur-[140px] pointer-events-none"></div>
+        <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#070A0F]/50 to-[#070A0F] pointer-events-none z-0"></div>
+
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 py-16 lg:py-24">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                
+                <!-- Left: Text Content -->
+                <div class="max-w-2xl relative z-20">
+
+                    <h1 class="font-gaming text-4xl sm:text-6xl font-extrabold text-white mb-6 leading-tight">
+                        อัปเกรดความแรง <br>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-[#00F0FF] via-[#3B82F6] to-[#8B5CF6]">ทะลวงทุกขีดจำกัด</span>
+                    </h1>
+                    <p class="text-base sm:text-lg text-slate-400 mb-8 leading-relaxed max-w-xl">
+                        ศูนย์รวมคอมพิวเตอร์และอุปกรณ์เกมมิ่งครบวงจร คัดสรรสินค้าคุณภาพเพื่อคุณโดยเฉพาะ มั่นใจได้ด้วยการรับประกัน 30 วันเต็ม
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <a href="/pc-builder.html" class="bg-gradient-to-r from-[#00F0FF] via-[#3B82F6] to-[#8B5CF6] text-[#070A0F] font-bold py-4 px-8 rounded-xl hover:shadow-[0_0_30px_rgba(0,240,255,0.4)] transform hover:-translate-y-0.5 transition-all text-sm tracking-wider flex items-center gap-2">
+                            <i class="fa-solid fa-bolt text-base"></i> จัดสเปคคอมพิวเตอร์
+                        </a>
+                        <a href="#products" class="bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/15 text-white font-bold py-4 px-8 rounded-xl transition-all text-sm flex items-center gap-2">
+                            ช้อปเลย <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right: 3D Floating Showcase Card -->
+                <div class="hidden lg:flex justify-center items-center relative">
+                    <!-- Glass Showcase Card -->
+                    <div class="relative z-10 w-[90%] bg-[#0F1420]/60 backdrop-blur-xl border border-white/10 rounded-3xl p-6 shadow-[0_20px_50px_rgba(0,0,0,0.6)] transform hover:scale-[1.02] transition-transform duration-500" style="animation: float 6s ease-in-out infinite;">
+                        <div class="relative overflow-hidden rounded-2xl aspect-[4/3] flex items-center justify-center p-4 bg-gradient-to-b from-white/5 to-transparent">
+                            <img src="/uploads/gaming_desk_setup.jpg" alt="Gaming Setup" class="w-full h-full object-cover rounded-2xl drop-shadow-[0_20px_30px_rgba(0,240,255,0.25)]">
+                        </div>
+
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <style>
+            @keyframes float {
+                0% { transform: translateY(0px); }
+                50% { transform: translateY(-15px); }
+                100% { transform: translateY(0px); }
+            }
+        </style>
+    </section>
+
+    <!-- Dynamic Banners Section -->
+    <section id="dynamic-banners-section" class="hidden relative w-full overflow-hidden bg-gamer-dark">
+        <div id="banner-slider" class="flex transition-transform duration-500 ease-in-out items-center">
+            <!-- Banners will be injected here -->
+        </div>
+        <button onclick="prevBanner()" class="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full hover:bg-gamer-cyan hover:text-gamer-dark flex items-center justify-center transition-all z-10"><i class="fa-solid fa-chevron-left"></i></button>
+        <button onclick="nextBanner()" class="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-black/50 text-white rounded-full hover:bg-gamer-cyan hover:text-gamer-dark flex items-center justify-center transition-all z-10"><i class="fa-solid fa-chevron-right"></i></button>
+        <div id="banner-dots" class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+            <!-- Dots will be injected here -->
+        </div>
+    </section>
+
+    <!-- Category Filter -->
+    <section class="py-10 border-y border-gamer-teal/20 bg-gamer-gray/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <h3 class="text-center font-gaming text-xl text-gamer-lightgray mb-6 tracking-widest font-semibold">เลือกตามหมวดหมู่</h3>
+            <div id="categories-container" class="flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6">
+                <!-- หมวดหมู่จะถูกโหลดจาก API -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Flash Sale Section -->
+    <section id="flash-sale-section" class="py-12 bg-gradient-to-r from-gamer-red/20 to-orange-500/10 border-b border-gamer-red/20 hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+                <div class="flex items-center gap-4">
+                    <i class="fa-solid fa-bolt text-4xl text-yellow-400 animate-pulse"></i>
+                    <div>
+                        <h2 class="font-gaming text-3xl md:text-4xl font-bold text-white tracking-widest drop-shadow-[0_0_15px_rgba(255,75,75,0.8)]">FLASH SALE</h2>
+                        <p class="text-gamer-lightgray text-sm mt-1">ดีลเดือด ลดจัดหนัก มีเวลาจำกัด!</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 bg-gamer-dark/80 px-4 py-2 rounded-xl border border-gamer-red/50">
+                    <span class="text-gamer-lightgray text-sm">สิ้นสุดใน:</span>
+                    <div class="font-gaming text-xl font-bold text-yellow-400 flex gap-2" id="countdown-timer">
+                        <span id="cd-hours">00</span>:<span id="cd-minutes">00</span>:<span id="cd-seconds">00</span>
+                    </div>
+                </div>
+            </div>
+            <div id="flash-sale-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Flash sale products -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Featured Products -->
+    <section id="products" class="py-20 flex-grow relative">
+        <div class="absolute top-40 right-0 w-96 h-96 bg-gamer-cyan/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="absolute bottom-40 left-0 w-96 h-96 bg-purple-500/5 rounded-full blur-[100px] pointer-events-none"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-8 border-b border-gamer-teal/20 pb-4 gap-4">
+                <div>
+                    <h2 class="font-gaming text-3xl md:text-4xl font-bold text-white flex items-center gap-3 drop-shadow-md">
+                        <i class="fa-solid fa-fire text-gamer-red animate-pulse"></i> <span id="section-title">สินค้าแนะนำ</span>
+                    </h2>
+                    <p class="text-gamer-teal mt-2 font-medium">ประสิทธิภาพระดับท็อปในราคาที่คุ้มกว่า ห้ามพลาด!</p>
+                </div>
+                <!-- Advanced Filters -->
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto" id="advanced-filters">
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter-min-price" placeholder="ราคาต่ำสุด" class="w-24 bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none" min="0">
+                        <span class="text-gamer-lightgray">-</span>
+                        <input type="number" id="filter-max-price" placeholder="ราคาสูงสุด" class="w-24 bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none" min="0">
+                    </div>
+                    <select id="filter-condition" onchange="loadProducts(currentCategory)" class="bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none">
+                        <option value="all">สภาพทั้งหมด</option>
+                        <option value="มือ 1">มือ 1</option>
+                        <option value="สภาพนางฟ้า">สภาพนางฟ้า</option>
+                        <option value="สภาพ 99%">สภาพ 99%</option>
+                        <option value="สภาพ 95%">สภาพ 95%</option>
+                        <option value="ไม่มีกล่อง">ไม่มีกล่อง</option>
+                    </select>
+                    <select id="filter-sort" onchange="loadProducts(currentCategory)" class="bg-gamer-dark text-white border border-gamer-teal/30 rounded-lg py-2 px-3 text-sm focus:border-gamer-cyan outline-none">
+                        <option value="default">เรียงลำดับปกติ</option>
+                        <option value="price_asc">ราคา: ต่ำ - สูง</option>
+                        <option value="price_desc">ราคา: สูง - ต่ำ</option>
+                    </select>
+                    <button onclick="loadProducts(currentCategory)" class="bg-gamer-teal/20 text-gamer-teal border border-gamer-teal/50 hover:bg-gamer-teal hover:text-gamer-dark px-3 py-2 rounded-lg text-sm font-bold transition-colors">
+                        <i class="fa-solid fa-filter"></i> กรอง
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Grid (จะถูกสร้างจาก JavaScript) -->
+            <div id="products-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
+                <!-- Loading -->
+                <div class="col-span-full text-center py-20">
+                    <i class="fa-solid fa-spinner fa-spin text-gamer-cyan text-4xl mb-4"></i>
+                    <p class="text-gamer-lightgray">กำลังโหลดสินค้า...</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-[#050608] border-t border-gamer-teal/20 py-12 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
+            <div class="flex items-center gap-2 mb-4">
+                <i class="fa-solid fa-microchip text-gamer-cyan text-2xl"></i>
+                <span class="font-gaming text-2xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+            </div>
+            <p class="text-gamer-lightgray/50 text-sm mb-6 text-center max-w-md">
+                ตลาดซื้อขายสินค้าไอทีมือสองระดับพรีเมียมและอุปกรณ์เกมมิ่งที่คุณไว้วางใจได้
+            </p>
+            <div class="flex gap-4 mb-8">
+                <a href="https://line.me/R/ti/p/@223ibgzc" target="_blank" class="w-10 h-10 rounded-full bg-gamer-gray flex items-center justify-center text-gamer-lightgray hover:bg-[#00B900] hover:text-white transition-colors" title="ติดต่อเราผ่าน LINE"><i class="fa-brands fa-line text-xl"></i></a>
+                <a href="#" class="w-10 h-10 rounded-full bg-gamer-gray flex items-center justify-center text-gamer-lightgray hover:bg-gamer-cyan hover:text-gamer-dark transition-colors"><i class="fa-brands fa-facebook-f"></i></a>
+            </div>
+            <p class="text-gamer-lightgray/40 text-xs">&copy; 2026 LX Shop. สงวนลิขสิทธิ์ทั้งหมด</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gamer-cyan text-gamer-dark font-bold px-6 py-3 rounded-xl shadow-[0_0_20px_rgba(102,252,241,0.5)] transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-check-circle"></i>
+        <span id="toast-msg">เพิ่มลงตะกร้าแล้ว!</span>
+    </div>
+
+    <script>
+    // ===================================
+    // JavaScript - เชื่อมหน้าเว็บกับ Backend API
+    // ===================================
+
+    const API_URL = '';
+    let user = null;
+    try {
+        const userStr = localStorage.getItem('lx_user');
+        if (userStr && userStr !== 'undefined') user = JSON.parse(userStr);
+    } catch(e) { localStorage.removeItem('lx_user'); }
+
+    // Update User UI
+    if (user) {
+        const userNameSpan = document.getElementById('user-name');
+        if (userNameSpan) {
+            userNameSpan.textContent = user.first_name || 'ผู้ใช้';
+            const loginLink = userNameSpan.closest('a');
+            if (loginLink) {
+                loginLink.href = '/profile.html';
+                let adminBtnHtml = '';
+                if (user.role === 'admin') {
+                    adminBtnHtml = `
+                        <a href="/admin.html" class="hidden sm:flex text-gamer-cyan hover:text-white transition-colors items-center gap-2 text-sm font-medium ml-4 border border-gamer-cyan/30 px-3 py-1 rounded-lg hover:bg-gamer-cyan hover:text-gamer-dark">
+                            <i class="fa-solid fa-user-shield"></i> จัดการหลังบ้าน
+                        </a>
+                    `;
+                }
+                loginLink.insertAdjacentHTML('afterend', `
+                    ${adminBtnHtml}
+                    <button onclick="logout()" class="hidden sm:flex text-gamer-red hover:text-white transition-colors items-center gap-2 text-sm font-medium ml-4 border border-gamer-red/30 px-3 py-1 rounded-lg hover:bg-gamer-red hover:border-gamer-red">
+                        <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                    </button>
+                `);
+            }
+        }
+    }
+
+    // Sync User Role dynamically from database
+    if (user && user.id) {
+        fetch(`/api/users/${user.id}`)
+            .then(res => res.json())
+            .then(json => {
+                if (json.success && json.data) {
+                    if (json.data.role !== user.role) {
+                        const updatedUser = { ...user, role: json.data.role };
+                        localStorage.setItem('lx_user', JSON.stringify(updatedUser));
+                        window.location.reload();
+                    }
+                }
+            })
+            .catch(console.error);
+    }
+
+    window.logout = function() {
+        localStorage.removeItem('lx_user');
+        window.location.reload();
+    };
+
+    // --- ตะกร้าและเปรียบเทียบ ---
+    function getCart() { 
+        try {
+            const str = localStorage.getItem('lx_cart');
+            return (str && str !== 'undefined') ? JSON.parse(str) : [];
+        } catch(e) {
+            localStorage.removeItem('lx_cart');
+            return [];
+        }
+    }
+    function saveCart(cart) {
+        localStorage.setItem('lx_cart', JSON.stringify(cart));
+        updateCartCount();
+    }
+    
+    function addToCompare(id) {
+        let list = JSON.parse(localStorage.getItem('lx_compare') || '[]');
+        if (list.includes(id)) {
+            showToast('สินค้านี้อยู่ในรายการเปรียบเทียบแล้ว');
+            return;
+        }
+        if (list.length >= 2) {
+            list.shift(); // Remove oldest
+        }
+        list.push(id);
+        localStorage.setItem('lx_compare', JSON.stringify(list));
+        showToast('เพิ่มลงในรายการเปรียบเทียบแล้ว');
+        setTimeout(() => { window.location.href = '/compare.html'; }, 1000);
+    }
+    function addToCart(product) {
+        if (product.stock_quantity <= 0) {
+            alert('สินค้าหมด');
+            return;
+        }
+        const cart = getCart();
+        const existing = cart.find(item => item.id === product.id);
+        const currentQty = existing ? existing.quantity : 0;
+        
+        if (currentQty >= product.stock_quantity) {
+            alert('ไม่สามารถเพิ่มสินค้าได้ เนื่องจากถึงขีดจำกัดสต๊อกที่มีอยู่แล้ว');
+            return;
+        }
+
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({ ...product, quantity: 1 });
+        }
+        saveCart(cart);
+        showToast(`เพิ่ม "${product.name.substring(0, 30)}..." ลงตะกร้าแล้ว!`);
+    }
+    function updateCartCount() {
+        const cart = getCart();
+        const total = cart.reduce((sum, item) => sum + item.quantity, 0);
+        document.getElementById('cart-count').textContent = total;
+    }
+
+    // --- Toast ---
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        document.getElementById('toast-msg').textContent = msg;
+        toast.classList.remove('translate-y-20', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+        setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+            toast.classList.remove('translate-y-0', 'opacity-100');
+        }, 2500);
+    }
+
+    // --- Wishlist ---
+    async function toggleWishlist(productId, btnElement) {
+        if (!user) {
+            window.location.href = '/login.html';
+            return;
+        }
+        try {
+            const res = await fetch('/api/wishlists/toggle', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_id: user.id, product_id: productId })
+            });
+            const json = await res.json();
+            if (json.success) {
+                showToast(json.message);
+                const icon = btnElement.querySelector('i');
+                if (json.is_wished) {
+                    icon.classList.remove('fa-regular');
+                    icon.classList.add('fa-solid', 'text-gamer-red');
+                } else {
+                    icon.classList.remove('fa-solid', 'text-gamer-red');
+                    icon.classList.add('fa-regular');
+                }
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    // --- ไอคอนประจำหมวดหมู่ ---
+    function getCategoryIcon(name) {
+        if (name.includes('การ์ดจอ')) return 'fa-solid fa-server';
+        if (name.includes('ซีพียู')) return 'fa-solid fa-microchip';
+        if (name.includes('แรม')) return 'fa-solid fa-memory';
+        if (name.includes('เมนบอร์ด')) return 'fa-solid fa-chess-board';
+        if (name.includes('อุปกรณ์')) return 'fa-solid fa-keyboard';
+        return 'fa-solid fa-box';
+    }
+
+    // --- สีป้ายสภาพสินค้า ---
+    function getConditionStyle(condition) {
+        if (condition.includes('99%')) return 'border-gamer-cyan/50 text-gamer-cyan';
+        if (condition.includes('95%')) return 'border-gamer-teal/50 text-gamer-teal';
+        if (condition.includes('นางฟ้า')) return 'border-gamer-cyan/50 text-gamer-cyan';
+        if (condition.includes('ไม่มีกล่อง')) return 'border-orange-500/50 text-orange-400';
+        return 'border-gamer-teal/50 text-gamer-teal';
+    }
+
+    // --- โหลดหมวดหมู่จาก API ---
+    let currentCategory = null;
+
+    async function loadCategories() {
+        try {
+            const res = await fetch(`${API_URL}/api/categories`);
+            const json = await res.json();
+            const container = document.getElementById('categories-container');
+
+            // ปุ่ม "ทั้งหมด"
+            let html = `
+                <button onclick="filterByCategory(null)" id="cat-all"
+                    class="cat-btn flex items-center gap-3 px-5 py-3 sm:px-8 sm:py-4 bg-gamer-gray border border-gamer-cyan rounded-xl shadow-[0_0_15px_rgba(102,252,241,0.2)] -translate-y-1 transition-all duration-300 group">
+                    <i class="fa-solid fa-border-all text-2xl text-gamer-cyan"></i>
+                    <span class="font-bold text-gamer-cyan text-sm sm:text-base">ทั้งหมด</span>
+                </button>
+            `;
+
+            json.data.forEach(cat => {
+                html += `
+                    <button onclick="filterByCategory(${cat.id}, '${cat.name}')" id="cat-${cat.id}"
+                        class="cat-btn flex items-center gap-3 px-5 py-3 sm:px-8 sm:py-4 bg-gamer-gray border border-gamer-teal/30 rounded-xl hover:border-gamer-cyan hover:shadow-[0_0_15px_rgba(102,252,241,0.2)] hover:-translate-y-1 transition-all duration-300 group">
+                        <i class="${getCategoryIcon(cat.name)} text-2xl text-gamer-lightgray group-hover:text-gamer-cyan transition-colors"></i>
+                        <span class="font-bold text-white group-hover:text-gamer-cyan transition-colors text-sm sm:text-base">${cat.name.split(' (')[0]}</span>
+                    </button>
+                `;
+            });
+            container.innerHTML = html;
+        } catch (err) {
+            console.error('โหลดหมวดหมู่ไม่สำเร็จ:', err);
+        }
+    }
+
+    // --- กรองตามหมวดหมู่ ---
+    async function filterByCategory(categoryId, categoryName) {
+        currentCategory = categoryId;
+        // อัปเดตหัวข้อ
+        document.getElementById('section-title').textContent = categoryId ? categoryName : 'สินค้าแนะนำ';
+        // อัปเดตสไตล์ปุ่ม
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.classList.remove('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            btn.classList.add('border-gamer-teal/30');
+            btn.querySelector('i').classList.remove('text-gamer-cyan');
+            btn.querySelector('i').classList.add('text-gamer-lightgray');
+            btn.querySelector('span').classList.remove('text-gamer-cyan');
+            btn.querySelector('span').classList.add('text-white');
+        });
+        const activeBtn = document.getElementById(categoryId ? `cat-${categoryId}` : 'cat-all');
+        if (activeBtn) {
+            activeBtn.classList.add('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            activeBtn.classList.remove('border-gamer-teal/30');
+            activeBtn.querySelector('i').classList.add('text-gamer-cyan');
+            activeBtn.querySelector('i').classList.remove('text-gamer-lightgray');
+            activeBtn.querySelector('span').classList.add('text-gamer-cyan');
+            activeBtn.querySelector('span').classList.remove('text-white');
+        }
+        await loadProducts(categoryId);
+    }
+
+    function filterByPromo() {
+        document.getElementById('section-title').textContent = '🔥 สินค้าราคาพิเศษ & โปรโมชั่น';
+        currentCategory = 'promo';
+        
+        // Reset category styles
+        document.querySelectorAll('.cat-btn').forEach(btn => {
+            btn.classList.remove('border-gamer-cyan', 'shadow-[0_0_15px_rgba(102,252,241,0.2)]', '-translate-y-1');
+            btn.classList.add('border-gamer-teal/30');
+            btn.querySelector('i').classList.remove('text-gamer-cyan');
+            btn.querySelector('i').classList.add('text-gamer-lightgray');
+            btn.querySelector('span').classList.remove('text-gamer-cyan');
+            btn.querySelector('span').classList.add('text-white');
+        });
+
+        loadProducts('promo');
+    }
+
+    // --- โหลดสินค้าจาก API ---
+    async function loadProducts(categoryId) {
+        const grid = document.getElementById('products-grid');
+        
+        // Skeleton Loader
+        let skeletonHtml = '';
+        for(let i=0; i<8; i++) {
+            skeletonHtml += `
+                <div class="bg-gamer-dark rounded-2xl overflow-hidden border border-gamer-teal/10 animate-pulse h-full flex flex-col">
+                    <div class="w-full h-48 sm:h-56 bg-gamer-gray"></div>
+                    <div class="p-5 flex flex-col flex-grow space-y-4">
+                        <div class="h-4 bg-gamer-gray rounded w-1/3"></div>
+                        <div class="h-5 bg-gamer-gray rounded w-3/4"></div>
+                        <div class="h-4 bg-gamer-gray rounded w-1/2"></div>
+                        <div class="mt-auto pt-4 flex justify-between items-center">
+                            <div class="h-6 bg-gamer-gray rounded w-1/3"></div>
+                            <div class="h-10 w-10 bg-gamer-gray rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        grid.innerHTML = skeletonHtml;
+        try {
+            let urlStr = API_URL ? `${API_URL}/api/products` : '/api/products';
+            const params = new URLSearchParams();
+            if (categoryId && categoryId !== 'promo') {
+                params.append('category', categoryId);
+            }
+
+            const conditionFilter = document.getElementById('filter-condition').value;
+            const sortFilter = document.getElementById('filter-sort').value;
+            const minPrice = document.getElementById('filter-min-price').value;
+            const maxPrice = document.getElementById('filter-max-price').value;
+            const searchInput = document.getElementById('search-input') ? document.getElementById('search-input').value : '';
+
+            if (conditionFilter && conditionFilter !== 'all') params.append('condition', conditionFilter);
+            if (sortFilter && sortFilter !== 'default') params.append('sortBy', sortFilter);
+            if (minPrice) params.append('minPrice', minPrice);
+            if (maxPrice) params.append('maxPrice', maxPrice);
+            if (searchInput) params.append('search', searchInput);
+
+            const queryString = params.toString();
+            if (queryString) {
+                urlStr += `?${queryString}`;
+            }
+
+            const res = await fetch(urlStr);
+            const json = await res.json();
+            
+            let displayData = json.data || [];
+            if (categoryId === 'promo') {
+                displayData = displayData.filter(p => p.discount_price || p.promo_tag);
+            }
+
+            if (displayData.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full text-center py-20">
+                        <i class="fa-solid fa-box-open text-gamer-teal text-5xl mb-4"></i>
+                        <p class="text-gamer-lightgray text-lg">ไม่พบสินค้าในหมวดหมู่นี้</p>
+                    </div>
+                `;
+                return;
+            }
+
+            grid.innerHTML = displayData.map(product => `
+                <div class="bg-[#0F1420]/80 border border-white/10 rounded-2xl overflow-hidden hover:border-[#00F0FF]/50 hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] transition-all duration-500 group flex flex-col relative backdrop-blur-md">
+                    <div class="absolute inset-0 bg-gradient-to-b from-transparent via-[#070A0F]/40 to-[#070A0F]/90 z-10 pointer-events-none"></div>
+                    
+                    <div class="absolute top-4 right-4 z-30 flex flex-col gap-2">
+                        <button onclick="toggleWishlist('${product.id}', this)" class="w-9 h-9 bg-[#070A0F]/70 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center hover:bg-[#FF3366] hover:text-white transition-all text-slate-300 shadow-md" title="บันทึกที่ถูกใจ">
+                            <i class="fa-regular fa-heart text-sm"></i>
+                        </button>
+                        <button onclick="addToCompare('${product.id}')" class="w-9 h-9 bg-[#070A0F]/70 backdrop-blur-md border border-white/10 rounded-full flex items-center justify-center hover:bg-[#00F0FF] hover:text-[#070A0F] transition-all text-slate-300 shadow-md" title="เปรียบเทียบสเปค">
+                            <i class="fa-solid fa-code-compare text-sm"></i>
+                        </button>
+                    </div>
+
+                    <a href="/product.html?id=${product.id}" class="relative overflow-hidden bg-white/5 aspect-square p-6 flex items-center justify-center cursor-pointer group">
+                        <span class="absolute top-4 left-4 z-20 bg-[#070A0F]/80 backdrop-blur-md border border-[#00F0FF]/40 text-[#00F0FF] text-[11px] font-bold px-2.5 py-1 rounded-lg shadow-lg tracking-wide">${product.condition_level}</span>
+                        ${product.promo_tag ? `<span class="absolute top-11 left-4 z-20 bg-gradient-to-r from-red-600 to-orange-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow-lg shadow-red-500/40 animate-pulse tracking-wide"><i class="fa-solid fa-fire mr-1"></i>${product.promo_tag}</span>` : ''}
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500 drop-shadow-[0_15px_25px_rgba(0,0,0,0.6)] z-0">
+                    </a>
+
+                    <div class="p-6 flex flex-col flex-grow relative z-20 bg-[#0F1420]/90">
+                        <div class="text-[11px] text-[#00F0FF] mb-1.5 font-bold uppercase tracking-widest flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-[#00F0FF]"></span> ${product.category_name || 'ทั่วไป'}
+                        </div>
+                        <a href="/product.html?id=${product.id}" class="text-base font-bold text-white mb-2 line-clamp-2 leading-snug group-hover:text-[#00F0FF] transition-colors cursor-pointer">${product.name}</a>
+                        <p class="text-xs text-slate-400 mb-5 flex-grow line-clamp-2 leading-relaxed">${product.description || ''}</p>
+                        
+                        <div class="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+                            <div>
+                                ${product.discount_price 
+                                    ? `<div class="text-[11px] text-slate-500 line-through">฿${Number(product.price).toLocaleString()}</div>
+                                       <div class="font-gaming text-2xl font-bold text-[#00F0FF] drop-shadow-[0_0_10px_rgba(0,240,255,0.3)]">฿${Number(product.discount_price).toLocaleString()}</div>`
+                                    : `<div class="font-gaming text-2xl font-bold text-white">฿${Number(product.price).toLocaleString()}</div>`
+                                }
+                            </div>
+                            ${product.stock_quantity > 0 
+                                ? `<button onclick='addToCart(${JSON.stringify({ id: product.id, name: product.name, price: product.discount_price || product.price, image_url: product.image_url, stock_quantity: product.stock_quantity })})' class="bg-[#00F0FF]/10 border border-[#00F0FF]/30 hover:bg-[#00F0FF] text-[#00F0FF] hover:text-[#070A0F] w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-300 shadow-lg hover:shadow-[0_0_20px_rgba(0,240,255,0.5)]">
+                                    <i class="fa-solid fa-cart-plus text-base"></i>
+                                </button>`
+                                : `<div class="bg-[#FF3366]/10 border border-[#FF3366]/30 text-[#FF3366] text-xs font-bold px-3 py-2 rounded-xl flex items-center justify-center whitespace-nowrap">สินค้าหมด</div>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (err) {
+            grid.innerHTML = `
+                <div class="col-span-full text-center py-20">
+                    <i class="fa-solid fa-triangle-exclamation text-gamer-red text-5xl mb-4"></i>
+                    <p class="text-gamer-lightgray text-lg">ไม่สามารถโหลดสินค้าได้ กรุณาลองใหม่</p>
+                </div>
+            `;
+            console.error('โหลดสินค้าไม่สำเร็จ:', err);
+        }
+    }
+
+    // --- ค้นหาสินค้า ---
+    function searchProducts() {
+        const query = document.getElementById('search-input').value.trim();
+        if (query) {
+            document.getElementById('section-title').textContent = `ผลการค้นหา "${query}"`;
+        } else {
+            document.getElementById('section-title').textContent = 'สินค้าแนะนำ';
+        }
+        loadProducts(currentCategory);
+    }
+
+    // ค้นหาเมื่อกด Enter
+    document.getElementById('search-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') { searchProducts(); document.getElementById('search-dropdown').classList.add('hidden'); } });
+
+    // --- Autocomplete (ช่องค้นหาแบบพิมพ์แล้วขึ้นเลย) ---
+    const searchDropdown = document.getElementById('search-dropdown');
+    let allProductsCache = [];
+
+    async function loadAllProductsForSearch() {
+        try {
+            const res = await fetch(`${API_URL}/api/products`);
+            const json = await res.json();
+            allProductsCache = json.data;
+        } catch (e) { console.error('Failed to load products cache for search'); }
+    }
+
+    document.getElementById('search-input')?.addEventListener('input', (e) => {
+        const query = e.target.value.trim().toLowerCase();
+        if (!query) {
+            searchDropdown.classList.add('hidden');
+            return;
+        }
+
+        // ค้นหาจำกัด 5 รายการ
+        const filtered = allProductsCache.filter(p => p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query))).slice(0, 5);
+        
+        if (filtered.length === 0) {
+            searchDropdown.innerHTML = `<div class="px-4 py-3 text-sm text-gamer-lightgray/50">ไม่พบสินค้า "${query}"</div>`;
+            searchDropdown.classList.remove('hidden');
+            return;
+        }
+
+        searchDropdown.innerHTML = filtered.map(p => `
+            <a href="/product.html?id=${p.id}" class="flex items-center gap-3 px-4 py-3 hover:bg-white/5 border-b border-gamer-teal/10 last:border-0 transition-colors">
+                <img src="${p.image_url}" class="w-10 h-10 object-contain bg-white/5 rounded-md" alt="${p.name}">
+                <div class="flex-1 min-w-0">
+                    <div class="text-sm font-bold text-white truncate">${p.name}</div>
+                    <div class="text-xs text-gamer-teal">
+                        ${p.discount_price ? `<span class="line-through text-gamer-lightgray/50 mr-1">฿${Number(p.price).toLocaleString()}</span><span class="text-gamer-cyan">฿${Number(p.discount_price).toLocaleString()}</span>` : `฿${Number(p.price).toLocaleString()}`}
+                        ${p.stock_quantity <= 0 ? '<span class="text-gamer-red ml-1 font-bold">(สินค้าหมด)</span>' : ''}
+                    </div>
+                </div>
+            </a>
+        `).join('');
+        searchDropdown.classList.remove('hidden');
+    });
+
+    // ปิด Dropdown เมื่อคลิกที่อื่น
+    document.addEventListener('click', (e) => {
+        if (!document.getElementById('search-input').contains(e.target) && !searchDropdown.contains(e.target)) {
+            searchDropdown.classList.add('hidden');
+        }
+    });
+
+    // --- Advanced Filters Events ---
+    document.getElementById('filter-condition').addEventListener('change', () => loadProducts(currentCategory));
+    document.getElementById('filter-sort').addEventListener('change', () => loadProducts(currentCategory));
+
+    // --- Flash Sale Logic ---
+    function initFlashSale() {
+        const grid = document.getElementById('flash-sale-grid');
+        const flashProducts = allProductsCache.filter(p => p.discount_price).slice(0, 4);
+        if (flashProducts.length > 0) {
+            document.getElementById('flash-sale-section').classList.remove('hidden');
+            grid.innerHTML = flashProducts.map(product => `
+                <div class="bg-gamer-dark/80 border border-gamer-red/30 rounded-2xl overflow-hidden hover:border-gamer-red hover:shadow-[0_0_25px_rgba(255,75,75,0.2)] transition-all duration-300 group flex flex-col relative">
+                    <a href="/product.html?id=${product.id}" class="relative overflow-hidden bg-white/5 aspect-square p-6 flex items-center justify-center cursor-pointer">
+                        <span class="absolute top-3 left-3 z-20 bg-gamer-red text-white text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-1 rounded-full shadow-lg tracking-wide"><i class="fa-solid fa-fire mr-1"></i>ลดเดือด</span>
+                        <img src="${product.image_url}" alt="${product.name}" class="w-full h-full object-contain group-hover:scale-110 group-hover:rotate-2 transition-transform duration-500 z-0">
+                    </a>
+                    <div class="p-4 flex flex-col flex-grow relative z-20">
+                        <a href="/product.html?id=${product.id}" class="text-sm font-bold text-white mb-2 line-clamp-2 leading-snug group-hover:text-gamer-cyan transition-colors cursor-pointer">${product.name}</a>
+                        <div class="flex items-center justify-between mt-auto">
+                            <div>
+                                <div class="text-xs text-gamer-lightgray/50 line-through">฿${Number(product.price).toLocaleString()}</div>
+                                <div class="font-gaming text-xl font-bold text-yellow-400">฿${Number(product.discount_price).toLocaleString()}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            startCountdown();
+        }
+    }
+
+    function startCountdown() {
+        // Set midnight tonight
+        const midnight = new Date();
+        midnight.setHours(23, 59, 59, 0);
+
+        setInterval(() => {
+            const now = new Date().getTime();
+            const distance = midnight.getTime() - now;
+            
+            if (distance < 0) {
+                document.getElementById('countdown-timer').innerHTML = "EXPIRED";
+                return;
+            }
+            
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            
+            document.getElementById('cd-hours').textContent = hours.toString().padStart(2, '0');
+            document.getElementById('cd-minutes').textContent = minutes.toString().padStart(2, '0');
+            document.getElementById('cd-seconds').textContent = seconds.toString().padStart(2, '0');
+        }, 1000);
+    }
+
+    // --- เริ่มต้นโหลดข้อมูล ---
+    updateCartCount();
+    loadCategories();
+    loadProducts();
+    loadAllProductsForSearch().then(initFlashSale);
+
+    // --- Daily Login Bonus ---
+    function checkDailyLogin() {
+        return; // Daily Login Bonus Disabled
+    }
+
+    window.claimDailyReward = async function(today, userId) {
+        try {
+            // Update points via backend API
+            const res = await fetch(`/api/users/${userId}/add-points`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ points: 100 })
+            });
+            const json = await res.json();
+            
+            if (json.success) {
+                // Save claim date to localStorage to prevent multiple claims today
+                localStorage.setItem('lx_last_login_' + userId, today);
+                
+                // Update localStorage user points
+                let storageUser = null;
+                try {
+                    const str = localStorage.getItem('lx_user');
+                    if (str && str !== 'undefined') storageUser = JSON.parse(str);
+                } catch(e) {}
+                
+                if (storageUser) {
+                    storageUser.points = (storageUser.points || 0) + 100;
+                    localStorage.setItem('lx_user', JSON.stringify(storageUser));
+                }
+            }
+            
+            // Trigger Confetti if available
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            }
+            
+            // Find the button that calls claimDailyReward specifically
+            const buttons = document.querySelectorAll('#daily-reward-modal button');
+            if (buttons.length > 1) {
+                const btn = buttons[1];
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> รับแล้ว!';
+                btn.classList.replace('bg-gamer-cyan', 'bg-green-500');
+                btn.classList.replace('text-gamer-dark', 'text-white');
+            }
+        } catch (e) {
+            console.error(e);
+        } finally {
+            setTimeout(() => {
+                const modal = document.getElementById('daily-reward-modal');
+                if (modal) modal.remove();
+            }, 1500);
+        }
+    };
+
+    // --- Dynamic Banners Logic ---
+    let currentBannerIndex = 0;
+    let banners = [];
+    let bannerInterval;
+
+    async function loadBanners() {
+        try {
+            const res = await fetch('/api/banners');
+            const json = await res.json();
+            if (json.success && json.data.length > 0) {
+                banners = json.data;
+                document.getElementById('dynamic-banners-section').classList.remove('hidden');
+                renderBanners();
+                startBannerAutoSlide();
+            }
+        } catch (err) { console.error(err); }
+    }
+
+    function renderBanners() {
+        const slider = document.getElementById('banner-slider');
+        const dots = document.getElementById('banner-dots');
+        
+        slider.innerHTML = banners.map(b => `
+            <div class="min-w-full cursor-pointer flex-shrink-0 relative group bg-gamer-dark flex justify-center items-center" onclick="${b.link_url ? `window.location.href='${b.link_url}'` : ''}">
+                <img src="${b.image_url}" class="w-full max-h-[600px] object-contain" alt="Banner">
+                <div class="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors pointer-events-none"></div>
+            </div>
+        `).join('');
+
+        dots.innerHTML = banners.map((_, i) => `
+            <button onclick="goToBanner(${i})" class="w-3 h-3 rounded-full transition-all ${i === currentBannerIndex ? 'bg-gamer-cyan w-6' : 'bg-white/50 hover:bg-white'}"></button>
+        `).join('');
+
+        updateBannerPosition();
+    }
+
+    function updateBannerPosition() {
+        const slider = document.getElementById('banner-slider');
+        slider.style.transform = `translateX(-${currentBannerIndex * 100}%)`;
+        
+        // Update dots
+        const dots = document.getElementById('banner-dots').children;
+        for (let i = 0; i < dots.length; i++) {
+            if (i === currentBannerIndex) {
+                dots[i].className = 'w-6 h-3 rounded-full transition-all bg-gamer-cyan';
+            } else {
+                dots[i].className = 'w-3 h-3 rounded-full transition-all bg-white/50 hover:bg-white';
+            }
+        }
+    }
+
+    window.nextBanner = () => {
+        currentBannerIndex = (currentBannerIndex + 1) % banners.length;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    window.prevBanner = () => {
+        currentBannerIndex = (currentBannerIndex - 1 + banners.length) % banners.length;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    window.goToBanner = (index) => {
+        currentBannerIndex = index;
+        updateBannerPosition();
+        resetBannerInterval();
+    };
+
+    function startBannerAutoSlide() {
+        bannerInterval = setInterval(window.nextBanner, 5000); // 5 seconds
+    }
+
+    function resetBannerInterval() {
+        clearInterval(bannerInterval);
+        startBannerAutoSlide();
+    }
+
+    loadBanners();
+    checkDailyLogin();
+    </script>
+    <script src="/theme.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script src="/mobile-nav.js"></script>
+    <!-- Particles.js -->
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            particlesJS("particles-js", {
+                "particles": {
+                    "number": { "value": 80, "density": { "enable": true, "value_area": 800 } },
+                    "color": { "value": "#66FCF1" },
+                    "shape": { "type": "circle" },
+                    "opacity": { "value": 0.5, "random": true, "anim": { "enable": true, "speed": 1, "opacity_min": 0.1, "sync": false } },
+                    "size": { "value": 3, "random": true, "anim": { "enable": false } },
+                    "line_linked": { "enable": true, "distance": 150, "color": "#45A29E", "opacity": 0.4, "width": 1 },
+                    "move": { "enable": true, "speed": 2, "direction": "none", "random": false, "straight": false, "out_mode": "out", "bounce": false }
+                },
+                "interactivity": {
+                    "detect_on": "canvas",
+                    "events": {
+                        "onhover": { "enable": true, "mode": "grab" },
+                        "onclick": { "enable": true, "mode": "push" },
+                        "resize": true
+                    },
+                    "modes": {
+                        "grab": { "distance": 140, "line_linked": { "opacity": 1 } },
+                        "push": { "particles_nb": 4 }
+                    }
+                },
+                "retina_detect": true
+            });
+        });
+    </script>
+<script src="/audio.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>บัญชีของฉัน - LX Shop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script>
+        tailwind.config = { theme: { extend: { colors: { gamer: { dark: '#0B0C10', gray: '#1F2833', lightgray: '#C5C6C7', cyan: '#66FCF1', teal: '#45A29E', red: '#FF4B4B', green: '#2ecc71' } } } } }
+    </script>
+    <style>
+        body { font-family: 'IBM Plex Sans Thai', sans-serif; } 
+        .font-gaming { font-family: 'Prompt', sans-serif; font-weight: 700; }
+        @media print {
+            body {
+                background-color: white !important;
+                color: black !important;
+            }
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                background-color: white !important;
+                color: black !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gamer-dark text-gamer-lightgray min-h-screen flex flex-col">
+
+    <!-- Nav -->
+    <nav class="bg-gamer-gray/90 backdrop-blur-md border-b border-gamer-teal/30 sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-20">
+                <a href="/" class="flex items-center gap-2 group">
+                    <i class="fa-solid fa-microchip text-gamer-cyan text-3xl group-hover:rotate-12 transition-transform"></i>
+                    <span class="font-gaming text-3xl font-bold text-white tracking-wider">LX<span class="text-gamer-cyan">SHOP</span></span>
+                </a>
+                <div class="flex items-center gap-6">
+                    <button class="theme-toggle text-gamer-lightgray hover:text-yellow-400 transition-colors text-xl" title="สลับโหมดหน้าจอ">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    <a href="/cart.html" class="text-gamer-lightgray hover:text-gamer-cyan transition-colors flex items-center gap-2">
+                        <div class="relative">
+                            <i class="fa-solid fa-cart-shopping text-xl"></i>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-gamer-cyan text-gamer-dark text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center opacity-0 transition-opacity">0</span>
+                        </div>
+                    </a>
+                    <button onclick="logout()" class="text-gamer-red hover:text-white text-sm flex items-center gap-1 transition-colors">
+                        <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 flex-grow w-full">
+        <h2 class="font-gaming text-3xl font-bold text-white mb-8 border-l-4 border-gamer-cyan pl-4">บัญชีของฉัน</h2>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left: User Info -->
+            <div class="lg:col-span-1">
+                <div class="sticky top-24 space-y-6">
+                    <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6">
+                        <div class="w-24 h-24 bg-gamer-dark rounded-full mx-auto mb-4 flex items-center justify-center border-2 border-gamer-cyan shadow-[0_0_15px_rgba(102,252,241,0.3)]">
+                        <i class="fa-solid fa-user text-4xl text-gamer-cyan"></i>
+                    </div>
+                    <h3 id="user-name" class="font-gaming text-xl font-bold text-white text-center mb-1"></h3>
+                    <p id="user-email" class="text-gamer-lightgray/70 text-center text-sm mb-4"></p>
+
+                    <div class="hidden bg-gamer-dark border border-yellow-400/30 rounded-xl py-3 px-4 mb-6 flex justify-between items-center">
+                        <span class="text-gamer-lightgray text-sm"><i class="fa-solid fa-coins text-yellow-400"></i> แต้มสะสม</span>
+                        <span id="user-points" class="font-gaming text-xl font-bold text-yellow-400">0</span>
+                    </div>
+
+                    <!-- KYC Status -->
+                    <div id="kyc-section" class="bg-gamer-dark border border-gamer-teal/30 rounded-xl py-4 px-4 mb-6 flex flex-col gap-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gamer-lightgray text-sm"><i class="fa-solid fa-id-card text-gamer-cyan"></i> ยืนยันตัวตนผู้ขาย</span>
+                            <span id="kyc-status-badge" class="px-2 py-1 rounded text-xs font-bold bg-gamer-gray text-gamer-lightgray">ตรวจสอบสถานะ...</span>
+                        </div>
+                        <button id="btn-kyc-verify" onclick="document.getElementById('kyc-modal').classList.remove('hidden')" class="hidden w-full mt-2 bg-gamer-teal/20 text-gamer-cyan border border-gamer-teal hover:bg-gamer-teal hover:text-gamer-dark font-bold py-1.5 rounded-lg text-xs transition-all shadow-[0_0_10px_rgba(69,162,158,0.2)]">
+                            ยืนยันตัวตนเพื่อขายสินค้า
+                        </button>
+                    </div>
+
+                    <div class="space-y-3">
+                        <a href="/wishlist.html" class="block w-full text-center bg-gamer-dark border border-gamer-teal/30 text-white font-bold py-3 rounded-xl hover:border-gamer-cyan transition-all">
+                            <i class="fa-solid fa-heart text-gamer-red mr-2"></i> สินค้าที่ถูกใจ
+                        </a>
+                    </div>
+
+                    <!-- Achievements -->
+                    <div class="mt-8 border-t border-gamer-teal/20 pt-6">
+                        <h4 class="font-gaming text-white text-sm tracking-wider mb-4 text-center"><i class="fa-solid fa-medal text-gamer-cyan mr-1"></i> เหรียญตราความสำเร็จ</h4>
+                        <div class="grid grid-cols-3 gap-2" id="badges-container">
+                            <!-- Badges will be generated here -->
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            </div>
+
+            <!-- Right: Tabs Content -->
+            <div class="lg:col-span-2">
+                <div class="bg-gamer-gray/50 border border-gamer-teal/20 rounded-2xl p-6 min-h-[500px]">
+                    <h3 class="font-gaming text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-gamer-teal"></i> ประวัติคำสั่งซื้อ
+                    </h3>
+                    <div id="orders-list" class="space-y-4">
+                        <p class="text-center text-gamer-lightgray/50 py-8"><i class="fa-solid fa-spinner fa-spin mr-2"></i>กำลังโหลด...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gamer-dark border-t border-gamer-gray mt-12 py-8 text-center text-gamer-lightgray text-sm">
+        <p>&copy; 2026 LX Shop. All rights reserved.</p>
+    </footer>
+
+    <script>
+        const user = JSON.parse(localStorage.getItem('lx_user'));
+        if (!user) {
+            window.location.href = '/login.html';
+        }
+
+        // หากเป็นแอดมิน แสดงปุ่มสำหรับเข้าหน้าหลังบ้านเพิ่มเติมในเมนู
+        if (user && user.role === 'admin') {
+            const navFlex = document.querySelector('nav .flex.items-center.gap-6');
+            if (navFlex) {
+                const logoutBtn = navFlex.querySelector('button[onclick="logout()"]');
+                if (logoutBtn) {
+                    logoutBtn.insertAdjacentHTML('beforebegin', `
+                        <a href="/admin.html" class="text-gamer-cyan hover:text-white text-sm flex items-center gap-1 border border-gamer-cyan/30 px-3 py-1 rounded-lg hover:bg-gamer-cyan hover:text-gamer-dark transition-colors mr-2">
+                            <i class="fa-solid fa-user-shield"></i> จัดการหลังบ้าน
+                        </a>
+                    `);
+                }
+            }
+        }
+        // ดึงข้อมูลผู้ใช้ (รวมถึง kyc_status)
+        async function loadUserInfo() {
+            const token = localStorage.getItem('lx_token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            try {
+                // Decode token to get user ID
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload.id;
+
+                const res = await fetch(`/api/users/${userId}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const json = await res.json();
+                
+                if (json.success) {
+                    const u = json.data;
+                    document.getElementById('user-name').innerText = `${u.first_name} ${u.last_name}`;
+                    document.getElementById('user-email').innerText = u.email;
+                    document.getElementById('user-points').innerText = u.points ? Number(u.points).toLocaleString() : 0;
+                    
+                    // Update KYC Status UI
+                    const kycBadge = document.getElementById('kyc-status-badge');
+                    const kycBtn = document.getElementById('btn-kyc-verify');
+                    
+                    if (u.kyc_status === 'verified') {
+                        kycBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-green-500/20 text-green-400 border border-green-500/30';
+                        kycBadge.innerHTML = '<i class="fa-solid fa-check-circle"></i> ยืนยันแล้ว';
+                        kycBtn.classList.add('hidden');
+                    } else if (u.kyc_status === 'pending') {
+                        kycBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-yellow-500/20 text-yellow-400 border border-yellow-500/30';
+                        kycBadge.innerHTML = '<i class="fa-solid fa-clock"></i> รอตรวจสอบ';
+                        kycBtn.classList.add('hidden');
+                    } else if (u.kyc_status === 'rejected') {
+                        kycBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-red-500/20 text-red-400 border border-red-500/30';
+                        kycBadge.innerHTML = '<i class="fa-solid fa-xmark-circle"></i> ถูกปฏิเสธ';
+                        kycBtn.classList.remove('hidden');
+                        kycBtn.innerText = 'ส่งข้อมูลยืนยันตัวตนอีกครั้ง';
+                    } else {
+                        kycBadge.className = 'px-2 py-1 rounded text-xs font-bold bg-gamer-gray text-gamer-lightgray border border-gamer-teal/30';
+                        kycBadge.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i> ยังไม่ได้ยืนยัน';
+                        kycBtn.classList.remove('hidden');
+                    }
+
+                    renderBadges(u.points || 0);
+                } else {
+                    console.error('Failed to load user info:', json.message);
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+        
+        loadUserInfo();
+
+        // Fetch Latest Points
+        async function loadUserPoints() {
+            try {
+                const res = await fetch(`/api/users/${user.id}`);
+                const json = await res.json();
+                if (json.success) {
+                    document.getElementById('user-points').textContent = Number(json.data.points || 0).toLocaleString();
+                    
+                    // ซิงค์ข้อมูลสิทธิ์และคะแนนล่าสุดจากฐานข้อมูลลงในเบราว์เซอร์
+                    const updatedUser = { ...user, ...json.data };
+                    localStorage.setItem('lx_user', JSON.stringify(updatedUser));
+                    
+                    // หากตรวจพบว่าสิทธิ์เปลี่ยนเป็น admin ให้โหลดหน้าใหม่เพื่อแสดงปุ่ม
+                    if (json.data.role === 'admin' && user.role !== 'admin') {
+                        window.location.reload();
+                    }
+                }
+            } catch (err) { console.error(err); }
+        }
+
+        // Load Cart Count
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem('lx_cart') || '[]');
+            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const badge = document.getElementById('cart-count');
+            if (count > 0) {
+                badge.textContent = count;
+                badge.classList.remove('opacity-0');
+            } else {
+                badge.classList.add('opacity-0');
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('lx_user');
+            window.location.href = '/login.html';
+        }
+
+        async function loadOrders() {
+            const list = document.getElementById('orders-list');
+            try {
+                const res = await fetch(`/api/orders/user/${user.id}`);
+                const json = await res.json();
+                
+                window.userOrders = json.data || [];
+
+                // --- Badges Logic Check ---
+                checkAndAwardBadges(json.data || []);
+                // --------------------------
+
+                if (!json.success || json.data.length === 0) {
+                    list.innerHTML = `
+                        <div class="text-center py-12">
+                            <i class="fa-solid fa-box-open text-6xl text-gamer-gray mb-4"></i>
+                            <p class="text-gamer-lightgray text-lg">คุณยังไม่มีประวัติการสั่งซื้อ</p>
+                            <a href="/" class="inline-block mt-4 text-gamer-cyan hover:underline">ไปช้อปปิ้งกันเลย</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = json.data.map(order => {
+                    const status = order.status || 'pending';
+                    let width = '0%';
+                    let step2Active = false;
+                    let step3Active = false;
+                    let step4Active = false;
+
+                    if (status === 'paid' || status === 'processing') {
+                        width = '33.33%';
+                        step2Active = true;
+                    } else if (status === 'shipped') {
+                        width = '66.66%';
+                        step2Active = true;
+                        step3Active = true;
+                    } else if (status === 'delivered') {
+                        width = '100%';
+                        step2Active = true;
+                        step3Active = true;
+                        step4Active = true;
+                    }
+
+                    const isCancelled = status === 'cancelled';
+                    
+                    const statusText = {
+                        'pending': 'รอดำเนินการ',
+                        'paid': 'ชำระเงินแล้ว',
+                        'processing': 'กำลังจัดเตรียม',
+                        'shipped': 'กำลังจัดส่ง',
+                        'delivered': 'จัดส่งสำเร็จ',
+                        'cancelled': 'ยกเลิกแล้ว'
+                    }[status] || status;
+
+                    const statusColorClass = {
+                        'pending': 'bg-yellow-500/10 text-yellow-500',
+                        'paid': 'bg-blue-500/10 text-blue-400',
+                        'processing': 'bg-purple-500/10 text-purple-400',
+                        'shipped': 'bg-indigo-500/10 text-indigo-400',
+                        'delivered': 'bg-green-500/10 text-green-500',
+                        'cancelled': 'bg-red-500/10 text-red-500'
+                    }[status] || 'bg-gray-500/10 text-gray-400';
+
+                    let timelineHtml = '';
+                    if (isCancelled) {
+                        timelineHtml = `
+                            <div class="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-3">
+                                <i class="fa-solid fa-circle-xmark text-gamer-red text-2xl"></i>
+                                <div>
+                                    <p class="text-white font-bold text-sm">รายการคำสั่งซื้อนี้ถูกยกเลิกแล้ว</p>
+                                    <p class="text-gamer-lightgray/50 text-xs mt-0.5">โปรดติดต่อฝ่ายบริการลูกค้าหากต้องการความช่วยเหลือเพิ่มเติม</p>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        timelineHtml = `
+                            <!-- Order Tracking Timeline -->
+                            <div class="mb-6 relative">
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 w-full h-1 bg-gamer-gray z-0 rounded-full"></div>
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-gamer-cyan z-0 rounded-full transition-all duration-1000" style="width: ${width}"></div>
+                                
+                                <div class="flex justify-between relative z-10">
+                                    <!-- Step 1 -->
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm bg-gamer-cyan text-gamer-dark shadow-[0_0_10px_rgba(102,252,241,0.5)]">
+                                            <i class="fa-solid fa-receipt"></i>
+                                        </div>
+                                        <span class="text-xs font-bold text-gamer-cyan">รับคำสั่งซื้อ</span>
+                                    </div>
+                                    <!-- Step 2 -->
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step2Active ? 'bg-gamer-cyan text-gamer-dark shadow-[0_0_10px_rgba(102,252,241,0.5)]' : 'bg-gamer-gray text-gamer-lightgray border border-gamer-teal/30'}">
+                                            <i class="fa-solid fa-box-open"></i>
+                                        </div>
+                                        <span class="text-xs font-bold ${step2Active ? 'text-gamer-cyan' : 'text-gamer-lightgray'}">กำลังจัดเตรียม</span>
+                                    </div>
+                                    <!-- Step 3 -->
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step3Active ? 'bg-gamer-cyan text-gamer-dark shadow-[0_0_10px_rgba(102,252,241,0.5)]' : 'bg-gamer-gray text-gamer-lightgray border border-gamer-teal/30'}">
+                                            <i class="fa-solid fa-truck-fast"></i>
+                                        </div>
+                                        <span class="text-xs font-bold ${step3Active ? 'text-gamer-cyan' : 'text-gamer-lightgray'}">กำลังจัดส่ง</span>
+                                    </div>
+                                    <!-- Step 4 -->
+                                    <div class="flex flex-col items-center gap-2">
+                                        <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step4Active ? 'bg-gamer-cyan text-gamer-dark shadow-[0_0_10px_rgba(102,252,241,0.5)]' : 'bg-gamer-gray text-gamer-lightgray border border-gamer-teal/30'}">
+                                            <i class="fa-solid fa-house-circle-check"></i>
+                                        </div>
+                                        <span class="text-xs font-bold ${step4Active ? 'text-gamer-cyan' : 'text-gamer-lightgray'}">สำเร็จ</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            ${(order.tracking_number && status !== 'cancelled') ? `
+                                <div class="mb-6 p-4 bg-gamer-teal/10 border border-gamer-teal/20 rounded-xl flex items-center justify-between">
+                                    <div class="flex items-center gap-3">
+                                        <i class="fa-solid fa-truck text-gamer-cyan text-xl"></i>
+                                        <div>
+                                            <p class="text-gamer-lightgray text-xs font-bold uppercase tracking-wider mb-1">เลขพัสดุ (${order.shipping_courier || 'ไม่ระบุขนส่ง'})</p>
+                                            <p class="text-white font-mono font-bold text-lg">${order.tracking_number}</p>
+                                        </div>
+                                    </div>
+                                    <button onclick="navigator.clipboard.writeText('${order.tracking_number}'); alert('คัดลอกเลขพัสดุแล้ว!');" class="bg-gamer-gray hover:bg-white text-white hover:text-gamer-dark px-3 py-1.5 rounded transition-colors text-sm font-bold flex items-center gap-2">
+                                        <i class="fa-regular fa-copy"></i> คัดลอก
+                                    </button>
+                                </div>
+                            ` : ''}
+                        `;
+                    }
+
+                    return `
+                    <div class="bg-gamer-dark border border-gamer-teal/20 rounded-xl p-5 hover:border-gamer-cyan/50 transition-all">
+                        <div class="flex flex-wrap justify-between items-start gap-4 border-b border-gamer-teal/10 pb-4 mb-4">
+                            <div>
+                                <h4 class="text-white font-bold font-gaming text-lg">คำสั่งซื้อ #${order.id.substring(0,8).toUpperCase()}</h4>
+                                <p class="text-gamer-lightgray/60 text-sm mt-1">${new Date(order.created_at).toLocaleString('th-TH')}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-gamer-cyan font-bold font-gaming text-xl">฿${Number(order.total_amount).toLocaleString()}</p>
+                                <div class="flex items-center justify-end gap-2 mt-1">
+                                    <span class="px-2 py-0.5 rounded text-xs font-bold ${statusColorClass}">
+                                        ${statusText}
+                                    </span>
+                                    <span class="px-2 py-0.5 rounded text-xs font-bold bg-gamer-teal/10 text-gamer-cyan">
+                                        ${order.payment_method === 'cod' ? 'COD' : (order.payment_method || 'โอนเงิน')}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${timelineHtml}
+
+                        <div class="space-y-3">
+                            ${(order.items || []).map(item => `
+                                <div class="flex items-center gap-4">
+                                    <img src="${item.image_url}" alt="${item.product_name}" class="w-12 h-12 object-contain bg-white/5 rounded-lg p-1">
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-white text-sm truncate hover:text-gamer-cyan cursor-pointer" onclick="window.location.href='/product.html?id=${item.product_id}'">${item.product_name}</p>
+                                        <p class="text-gamer-lightgray/70 text-xs">${item.quantity} ชิ้น x ฿${Number(item.unit_price).toLocaleString()}</p>
+                                    </div>
+                                    ${item.is_c2c && status === 'delivered' ? `
+                                        <button onclick="openReviewModal('${item.seller_id}', '${item.product_id}', '${item.product_name.replace(/'/g, "\\'")}')" class="bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500 hover:text-gamer-dark text-xs font-bold py-1.5 px-3 rounded-lg transition-all border border-yellow-500/50">
+                                            <i class="fa-solid fa-star"></i> รีวิวผู้ขาย
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div class="flex justify-end gap-3 mt-4 pt-4 border-t border-gamer-teal/10">
+                            ${status === 'shipped' ? `
+                                <button onclick="confirmReceipt('${order.id}')" class="bg-green-500 text-gamer-dark hover:bg-green-400 text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-all shadow-[0_0_10px_rgba(46,204,113,0.3)]">
+                                    <i class="fa-solid fa-box-open"></i> ฉันได้รับสินค้าแล้ว
+                                </button>
+                                <button onclick="trackDelivery('${order.id}', '${order.shipping_address.replace(/'/g, "\\'")}')" class="bg-gamer-cyan text-gamer-dark hover:bg-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-all">
+                                    <i class="fa-solid fa-map-location-dot"></i> ติดตามพัสดุ
+                                </button>
+                            ` : ''}
+                            <button onclick="printOrder('${order.id}')" class="bg-gamer-gray border border-gamer-teal/30 hover:border-gamer-cyan text-white text-xs font-bold py-2.5 px-4 rounded-lg flex items-center gap-1.5 transition-all">
+                                <i class="fa-solid fa-print"></i> พิมพ์ใบเสร็จ
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+            } catch (err) {
+                list.innerHTML = '<p class="text-center text-gamer-red py-8">ไม่สามารถโหลดข้อมูลคำสั่งซื้อได้</p>';
+            }
+        }
+
+        // --- Achievements Badges System ---
+        function checkAndAwardBadges(orders) {
+            const badgesContainer = document.getElementById('badges-container');
+            
+            // Define rules
+            const badges = [
+                { id: 'first_blood', name: 'First Blood', icon: 'fa-droplet', color: 'text-red-500', desc: 'สั่งซื้อสินค้าครั้งแรก', condition: () => orders.length >= 1 },
+                { id: 'big_spender', name: 'Big Spender', icon: 'fa-gem', color: 'text-purple-400', desc: 'ยอดสั่งซื้อสะสมเกิน 50,000 บาท', condition: () => orders.reduce((sum, o) => sum + Number(o.total_amount || 0), 0) >= 50000 },
+                { id: 'scout', name: 'The Scout', icon: 'fa-eye', color: 'text-gamer-cyan', desc: 'แวะชมสินค้าบ่อย', condition: () => localStorage.getItem('lx_view_count') >= 10 }
+            ];
+
+            let html = '';
+            badges.forEach(b => {
+                const isUnlocked = b.condition();
+                if(isUnlocked) {
+                    html += `
+                        <div class="flex flex-col items-center group relative cursor-pointer">
+                            <div class="w-12 h-12 rounded-full bg-gamer-dark border-2 border-gamer-cyan shadow-[0_0_10px_rgba(102,252,241,0.5)] flex items-center justify-center mb-1">
+                                <i class="fa-solid ${b.icon} ${b.color} text-xl animate-pulse"></i>
+                            </div>
+                            <span class="text-[10px] text-gamer-cyan font-bold text-center">${b.name}</span>
+                            
+                            <!-- Tooltip -->
+                            <div class="absolute bottom-full mb-2 bg-gamer-dark border border-gamer-cyan text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10 shadow-[0_0_10px_rgba(102,252,241,0.3)]">
+                                ${b.desc}
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="flex flex-col items-center opacity-30 grayscale group relative cursor-pointer">
+                            <div class="w-12 h-12 rounded-full bg-gamer-dark border-2 border-gamer-teal/30 flex items-center justify-center mb-1">
+                                <i class="fa-solid fa-lock text-gamer-lightgray text-xl"></i>
+                            </div>
+                            <span class="text-[10px] text-gamer-lightgray font-bold text-center">Locked</span>
+                            
+                            <!-- Tooltip -->
+                            <div class="absolute bottom-full mb-2 bg-gamer-dark border border-gamer-teal text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">
+                                ${b.desc}
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            badgesContainer.innerHTML = html;
+        }
+
+        window.printOrder = function(orderId) {
+            const orders = window.userOrders || [];
+            const order = orders.find(o => o.id === orderId);
+            if (!order) {
+                alert('ไม่พบข้อมูลคำสั่งซื้อ');
+                return;
+            }
+            
+            const printArea = document.getElementById('print-area');
+            let itemsHtml = '';
+            let subtotal = 0;
+            
+            (order.items || []).forEach(item => {
+                const itemTotal = Number(item.unit_price) * Number(item.quantity);
+                subtotal += itemTotal;
+                itemsHtml += `
+                    <tr style="border-bottom: 1px solid #e5e7eb;">
+                        <td style="padding: 12px; color: #111827;">${item.name}</td>
+                        <td style="padding: 12px; text-align: center; color: #111827;">${item.quantity}</td>
+                        <td style="padding: 12px; text-align: right; color: #111827;">฿${Number(item.unit_price).toLocaleString()}</td>
+                        <td style="padding: 12px; text-align: right; font-weight: bold; color: #111827;">฿${itemTotal.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            
+            const dateStr = new Date(order.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+            const pointsUsed = Number(order.points_used || 0);
+            const discountFromPoints = pointsUsed;
+            const totalAmount = Number(order.total_amount);
+            
+            printArea.innerHTML = `
+                <div style="font-family: 'Prompt', sans-serif; padding: 40px; background-color: white; color: black; max-width: 800px; margin: 0 auto;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #111827; padding-bottom: 20px; margin-bottom: 30px;">
+                        <div>
+                            <h1 style="font-size: 28px; font-weight: 800; color: #111827; margin: 0;">LX SHOP</h1>
+                            <p style="font-size: 12px; color: #4b5563; margin: 4px 0 0 0;">ศูนย์รวมชิ้นส่วนคอมพิวเตอร์และเกมมิ่งเกียร์มือสองคุณภาพสูง</p>
+                        </div>
+                        <div style="text-align: right;">
+                            <h2 style="font-size: 20px; font-weight: 700; color: #4b5563; margin: 0;">ใบเสร็จรับเงิน / ใบกำกับภาษี</h2>
+                            <p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">เลขที่คำสั่งซื้อ: #${order.id.toUpperCase()}</p>
+                            <p style="font-size: 12px; color: #6b7280; margin: 2px 0 0 0;">วันที่สั่งซื้อ: ${dateStr}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 30px; font-size: 14px; line-height: 1.5;">
+                        <h3 style="font-size: 16px; font-weight: 700; color: #111827; margin: 0 0 8px 0; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px;">ข้อมูลผู้สั่งซื้อ</h3>
+                        <p style="margin: 0; font-weight: bold; color: #111827;">คุณ ${user.first_name || ''} ${user.last_name || ''}</p>
+                        <p style="margin: 4px 0 0 0; color: #4b5563;">อีเมล: ${user.email}</p>
+                        <p style="margin: 4px 0 0 0; color: #4b5563;">ที่อยู่จัดส่ง: ${order.shipping_address || 'ข้อมูลที่อยู่ไม่ระบุ'}</p>
+                        <p style="margin: 4px 0 0 0; color: #4b5563;">วิธีชำระเงิน: ${order.payment_method === 'cod' ? 'ชำระเงินปลายทาง (COD)' : 'โอนเงินผ่านธนาคาร'}</p>
+                    </div>
+                    
+                    <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px; font-size: 14px;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6; border-bottom: 1px solid #e5e7eb;">
+                                <th style="padding: 12px; text-align: left; text-transform: uppercase; color: #374151;">รายการสินค้า</th>
+                                <th style="padding: 12px; text-align: center; text-transform: uppercase; color: #374151; width: 80px;">จำนวน</th>
+                                <th style="padding: 12px; text-align: right; text-transform: uppercase; color: #374151; width: 120px;">ราคาต่อหน่วย</th>
+                                <th style="padding: 12px; text-align: right; text-transform: uppercase; color: #374151; width: 120px;">ราคารวม</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${itemsHtml}
+                        </tbody>
+                    </table>
+                    
+                    <div style="display: flex; justify-content: flex-end; margin-bottom: 40px;">
+                        <div style="width: 320px; background-color: #f9fafb; padding: 20px; border-radius: 8px; border: 1px solid #e5e7eb; font-size: 14px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #4b5563;">
+                                <span>ยอดรวมสินค้า:</span>
+                                <span style="font-weight: bold; color: #111827;">฿${subtotal.toLocaleString()}</span>
+                            </div>
+                            ${pointsUsed > 0 ? `
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px; color: #dc2626;">
+                                <span>ส่วนลดจากการใช้แต้ม (${pointsUsed.toLocaleString()} แต้ม):</span>
+                                <span style="font-weight: bold;">-฿${discountFromPoints.toLocaleString()}</span>
+                            </div>
+                            ` : ''}
+                            <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: bold; color: #111827; border-top: 1px solid #e5e7eb; padding-top: 12px; margin-top: 12px;">
+                                <span>ยอดชำระสุทธิ:</span>
+                                <span style="color: #2563eb;">฿${totalAmount.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="text-align: center; font-size: 11px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 20px;">
+                        <p style="margin: 0;">* ใบเสร็จรับเงินอิเล็กทรอนิกส์นี้ออกโดยระบบอัตโนมัติของ LX Shop และถือเป็นหลักฐานการชำระเงินที่สมบูรณ์</p>
+                        <p style="margin: 4px 0 0 0;">ขอขอบคุณทุกการสนับสนุนของท่าน ทางเราหวังเป็นอย่างยิ่งว่าจะได้ให้บริการท่านอีกครั้ง</p>
+                    </div>
+                </div>
+            `;
+            
+            window.print();
+        };
+
+        // --- ระบบแลกส่วนลดและคูปองของรางวัล ---
+        async function redeemCoupon(pointsCost) {
+            if (!confirm(`ยืนยันการใช้แต้ม ${pointsCost} แต้ม เพื่อแลกรับคูปองส่วนลดใช่หรือไม่?`)) return;
+            
+            try {
+                const token = localStorage.getItem('lx_token');
+                const res = await fetch('/api/users/redeem-coupon', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ points_cost: pointsCost })
+                });
+                
+                const json = await res.json();
+                if (json.success) {
+                    alert(`🎉 แลกคูปองสำเร็จ!\nรหัสคูปองของคุณคือ: ${json.code}\nกรุณาคัดลอกรหัสเพื่อนำไปใช้ในขั้นตอนชำระเงิน`);
+                    
+                    let coupons = JSON.parse(localStorage.getItem('lx_redeemed_coupons') || '[]');
+                    coupons.unshift({ code: json.code, discount: json.discount, date: new Date().toLocaleDateString('th-TH') });
+                    localStorage.setItem('lx_redeemed_coupons', JSON.stringify(coupons));
+                    
+                    loadUserPoints();
+                    renderRedeemedCoupons();
+                } else {
+                    alert('❌ ไม่สามารถแลกรางวัลได้: ' + json.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+            }
+        }
+
+        function renderRedeemedCoupons() {
+            const coupons = JSON.parse(localStorage.getItem('lx_redeemed_coupons') || '[]');
+            const section = document.getElementById('redeemed-coupons-section');
+            const list = document.getElementById('my-coupons-list');
+            
+            if (coupons.length > 0) {
+                section.classList.remove('hidden');
+                list.innerHTML = coupons.map(c => `
+                    <div class="bg-gamer-dark/80 border border-gamer-teal/10 rounded-lg p-2 flex justify-between items-center text-xs mb-2">
+                        <div class="flex-grow pr-2">
+                            <p class="text-gamer-cyan font-mono font-bold select-all">${c.code}</p>
+                            <p class="text-gamer-lightgray/50 text-[10px]">ส่วนลด ฿${c.discount} (${c.date})</p>
+                        </div>
+                        <button onclick="copyToClipboard('${c.code}')" class="text-gamer-teal hover:text-gamer-cyan flex-shrink-0" title="คัดลอก"><i class="fa-solid fa-copy"></i></button>
+                    </div>
+                `).join('');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        window.copyToClipboard = (text) => {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📋 คัดลอกรหัสคูปองสำเร็จ!');
+            });
+        };
+        
+        // โหลดข้อมูลตอนเปิดหน้าเว็บ
+        // --- Leaflet Delivery Map Tracking ---
+        let trackingMap = null;
+        let vehicleMarker = null;
+        let animatedLine = null;
+        let animationInterval = null;
+
+        window.trackDelivery = function(orderId, address) {
+            document.getElementById('tracking-dest').textContent = address || 'ที่อยู่ลูกค้า';
+            document.getElementById('modal-tracking').classList.remove('hidden');
+
+            setTimeout(() => {
+                const origin = [13.7563, 100.5018];
+                const dest = [
+                    13.7563 + (Math.random() - 0.5) * 0.3,
+                    100.5018 + (Math.random() - 0.5) * 0.3
+                ];
+
+                if (trackingMap) {
+                    trackingMap.remove();
+                }
+
+                trackingMap = L.map('map-container').setView(origin, 11);
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '&copy; OpenStreetMap'
+                }).addTo(trackingMap);
+
+                const shopIcon = L.divIcon({
+                    html: '<i class="fa-solid fa-store text-gamer-cyan text-xl bg-gamer-dark/80 p-2 rounded-full border border-gamer-cyan/50"></i>',
+                    className: 'custom-div-icon',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                L.marker(origin, { icon: shopIcon }).addTo(trackingMap).bindPopup('คลังสินค้า LX Shop').openPopup();
+
+                const homeIcon = L.divIcon({
+                    html: '<i class="fa-solid fa-house-user text-gamer-green text-xl bg-gamer-dark/80 p-2 rounded-full border border-gamer-green/50"></i>',
+                    className: 'custom-div-icon',
+                    iconSize: [30, 30],
+                    iconAnchor: [15, 15]
+                });
+                L.marker(dest, { icon: homeIcon }).addTo(trackingMap).bindPopup('ที่อยู่ผู้รับ');
+
+                animatedLine = L.polyline([origin, dest], {
+                    color: '#66FCF1',
+                    dashArray: '5, 10',
+                    weight: 3,
+                    opacity: 0.8
+                }).addTo(trackingMap);
+
+                trackingMap.fitBounds([origin, dest]);
+
+                const truckIcon = L.divIcon({
+                    html: '<i class="fa-solid fa-truck text-gamer-cyan text-lg animate-bounce bg-gamer-dark p-1 rounded border border-gamer-cyan"></i>',
+                    className: 'custom-div-icon',
+                    iconSize: [25, 25],
+                    iconAnchor: [12, 12]
+                });
+                
+                vehicleMarker = L.marker(origin, { icon: truckIcon }).addTo(trackingMap);
+
+                let pct = 0;
+                if (animationInterval) clearInterval(animationInterval);
+                
+                animationInterval = setInterval(() => {
+                    pct += 0.01;
+                    if (pct > 1.0) pct = 0;
+                    
+                    const currentLat = origin[0] + (dest[0] - origin[0]) * pct;
+                    const currentLng = origin[1] + (dest[1] - origin[1]) * pct;
+                    
+                    vehicleMarker.setLatLng([currentLat, currentLng]);
+                }, 100);
+
+            }, 200);
+        };
+
+        window.closeTrackingModal = function() {
+            document.getElementById('modal-tracking').classList.add('hidden');
+            if (animationInterval) {
+                clearInterval(animationInterval);
+            }
+        };
+
+        // --- Order Actions ---
+        window.confirmReceipt = async function(orderId) {
+            if (!confirm('คุณได้รับสินค้าและตรวจสอบสภาพเรียบร้อยแล้วใช่หรือไม่?\n\n(หากเป็นสินค้าฝากขาย C2C ระบบ Escrow จะทำการโอนเงินให้ผู้ขายทันทีหลังกดยืนยัน)')) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('lx_token');
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                
+                const res = await fetch(`/api/orders/${orderId}/confirm-receipt`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ user_id: payload.id })
+                });
+                
+                const json = await res.json();
+                if (json.success) {
+                    alert('🎉 ขอบคุณที่ยืนยันการรับสินค้า!');
+                    loadOrders(); // Refresh
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + json.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาด กรุณาลองใหม่อีกครั้ง');
+            }
+        };
+
+        // --- Seller Review ---
+        window.openReviewModal = function(sellerId, consignmentId, productName) {
+            document.getElementById('review-seller-id').value = sellerId;
+            document.getElementById('review-consignment-id').value = consignmentId;
+            document.getElementById('review-product-name').innerText = productName;
+            document.getElementById('review-modal').classList.remove('hidden');
+        };
+
+        window.submitSellerReview = async function(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-review');
+            btn.disabled = true;
+
+            const token = localStorage.getItem('lx_token');
+            const data = {
+                seller_id: document.getElementById('review-seller-id').value,
+                consignment_id: document.getElementById('review-consignment-id').value,
+                rating: parseInt(document.getElementById('review-rating').value),
+                comment: document.getElementById('review-comment').value
+            };
+
+            try {
+                const res = await fetch('/api/seller-reviews', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+                const json = await res.json();
+                if (json.success) {
+                    alert('ส่งรีวิวสำเร็จ ขอบคุณสำหรับความคิดเห็น!');
+                    document.getElementById('review-modal').classList.add('hidden');
+                    document.getElementById('review-form').reset();
+                } else {
+                    alert('ส่งรีวิวไม่สำเร็จ: ' + json.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาดในการส่งรีวิว');
+            } finally {
+                btn.disabled = false;
+            }
+        };
+
+        renderRedeemedCoupons();
+
+        // KYC Submission Logic
+        async function submitKyc(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit-kyc');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งข้อมูล...';
+
+            try {
+                const token = localStorage.getItem('lx_token');
+                
+                // Upload ID Card
+                const idCardFile = document.getElementById('kyc-id-card').files[0];
+                const fdId = new FormData();
+                fdId.append('image', idCardFile);
+                const resId = await fetch('/api/upload', { method: 'POST', body: fdId });
+                const jsonId = await resId.json();
+                if(!jsonId.success) throw new Error('อัปโหลดบัตรประชาชนล้มเหลว');
+
+                // Upload Bank Passbook
+                const bookFile = document.getElementById('kyc-bank-book').files[0];
+                const fdBook = new FormData();
+                fdBook.append('image', bookFile);
+                const resBook = await fetch('/api/upload', { method: 'POST', body: fdBook });
+                const jsonBook = await resBook.json();
+                if(!jsonBook.success) throw new Error('อัปโหลดสมุดบัญชีล้มเหลว');
+
+                // Submit KYC
+                const kycData = {
+                    id_card_url: jsonId.url,
+                    bank_passbook_url: jsonBook.url,
+                    bank_name: document.getElementById('kyc-bank-name').value,
+                    bank_account_no: document.getElementById('kyc-bank-acc').value,
+                    bank_account_name: document.getElementById('kyc-bank-name-acc').value
+                };
+
+                const submitRes = await fetch('/api/users/kyc', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(kycData)
+                });
+
+                const submitJson = await submitRes.json();
+                if (submitJson.success) {
+                    alert('ส่งข้อมูลยืนยันตัวตนสำเร็จ กรุณารอแอดมินตรวจสอบ');
+                    document.getElementById('kyc-modal').classList.add('hidden');
+                    loadUserInfo(); // refresh UI
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + submitJson.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert(err.message || 'เกิดข้อผิดพลาดในการส่งข้อมูล');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'ส่งข้อมูลยืนยันตัวตน';
+            }
+        }
+
+        updateCartCount();
+        loadUserPoints();
+        loadOrders();
+    </script>
+    <!-- Printable Area (Hidden on screen, shown on print) -->
+    <div id="print-area" class="hidden"></div>
+    
+    <!-- Modal: Interactive Delivery Tracking Map -->
+    <div id="modal-tracking" class="fixed inset-0 bg-gamer-dark/90 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-gamer-gray border border-gamer-cyan/30 rounded-2xl w-full max-w-2xl p-6 relative shadow-[0_0_30px_rgba(102,252,241,0.2)]">
+            <button onclick="closeTrackingModal()" class="absolute top-4 right-4 text-gamer-lightgray hover:text-white z-[70]"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <h3 class="font-gaming text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-map-location-dot text-gamer-cyan animate-pulse"></i> แผนที่ติดตามการจัดส่งแบบสด
+            </h3>
+            <p class="text-gamer-lightgray/70 text-xs mb-4">แสดงที่อยู่จัดส่งและจำลองการเคลื่อนที่ของขนส่งพัสดุจากคลังสินค้า</p>
+
+            <div id="map-container" class="relative w-full h-[320px] rounded-xl overflow-hidden border border-gamer-teal/30 mb-4 bg-gamer-dark"></div>
+
+            <div class="bg-gamer-dark/50 border border-gamer-teal/10 rounded-xl p-4 text-xs space-y-2">
+                <div class="flex justify-between">
+                    <span class="text-gamer-lightgray/70">ต้นทาง:</span>
+                    <span class="text-white font-bold">คลังสินค้า LX Shop (กรุงเทพฯ)</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gamer-lightgray/70">ปลายทาง:</span>
+                    <span id="tracking-dest" class="text-white font-bold truncate max-w-[280px]">ที่อยู่จัดส่ง</span>
+                </div>
+                <div class="flex justify-between items-center border-t border-gamer-teal/10 pt-2 mt-2">
+                    <span class="text-gamer-lightgray/70 flex items-center gap-1.5"><i class="fa-solid fa-truck text-gamer-cyan"></i> สถานะขนส่ง:</span>
+                    <span class="text-gamer-cyan font-bold animate-pulse">รถขนส่งกำลังเดินทางไปยังบ้านของคุณ...</span>
+                </div>
+            </div>
+        </div>
+        </div>
+    </div>
+    
+    <!-- Modal: KYC Verification -->
+    <div id="kyc-modal" class="fixed inset-0 bg-gamer-dark/90 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-gamer-gray border border-gamer-cyan/30 rounded-2xl w-full max-w-lg p-6 relative shadow-[0_0_30px_rgba(102,252,241,0.2)] my-8">
+            <button onclick="document.getElementById('kyc-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gamer-lightgray hover:text-white z-[70]"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <h3 class="font-gaming text-2xl font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-gamer-cyan"></i> ยืนยันตัวตน (KYC)
+            </h3>
+            <p class="text-gamer-lightgray/70 text-xs mb-6 border-l-2 border-gamer-cyan pl-2">
+                เพื่อความปลอดภัยของระบบ Escrow คุณต้องยืนยันตัวตนก่อนเปิดการฝากขายสินค้า
+            </p>
+
+            <form onsubmit="submitKyc(event)" class="space-y-4">
+                <div class="bg-gamer-dark/50 p-4 rounded-xl border border-gamer-teal/20 space-y-3">
+                    <h4 class="text-white text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-id-card"></i> 1. เอกสารยืนยันตัวตน</h4>
+                    <div>
+                        <label class="block text-gamer-lightgray text-xs mb-1">ภาพถ่ายบัตรประชาชน (พร้อมเซ็นรับรองสำเนาถูกต้อง)</label>
+                        <input type="file" id="kyc-id-card" accept="image/*" required
+                               class="w-full bg-gamer-dark border border-gamer-teal/30 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-gamer-cyan transition-colors">
+                    </div>
+                </div>
+
+                <div class="bg-gamer-dark/50 p-4 rounded-xl border border-gamer-teal/20 space-y-3">
+                    <h4 class="text-white text-sm font-bold flex items-center gap-2"><i class="fa-solid fa-building-columns"></i> 2. บัญชีรับเงิน</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="col-span-2">
+                            <label class="block text-gamer-lightgray text-xs mb-1">ธนาคาร</label>
+                            <input type="text" id="kyc-bank-name" required placeholder="เช่น กสิกรไทย, ไทยพาณิชย์"
+                                   class="w-full bg-gamer-dark border border-gamer-teal/30 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-gamer-cyan transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-gamer-lightgray text-xs mb-1">เลขที่บัญชี</label>
+                            <input type="text" id="kyc-bank-acc" required placeholder="เลขที่บัญชี"
+                                   class="w-full bg-gamer-dark border border-gamer-teal/30 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-gamer-cyan transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-gamer-lightgray text-xs mb-1">ชื่อบัญชี (ต้องตรงกับบัตร ปชช.)</label>
+                            <input type="text" id="kyc-bank-name-acc" required placeholder="ชื่อ-นามสกุล"
+                                   class="w-full bg-gamer-dark border border-gamer-teal/30 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-gamer-cyan transition-colors">
+                        </div>
+                        <div class="col-span-2">
+                            <label class="block text-gamer-lightgray text-xs mb-1">ภาพถ่ายหน้าสมุดบัญชี (Bookbank)</label>
+                            <input type="file" id="kyc-bank-book" accept="image/*" required
+                                   class="w-full bg-gamer-dark border border-gamer-teal/30 rounded-lg px-3 py-2 text-white text-xs focus:outline-none focus:border-gamer-cyan transition-colors">
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" id="btn-submit-kyc" class="w-full bg-gamer-cyan text-gamer-dark font-bold py-3 rounded-xl hover:bg-white transition-all shadow-[0_0_15px_rgba(102,252,241,0.4)] mt-4">
+                    ส่งข้อมูลยืนยันตัวตน
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal: Review Seller -->
+    <div id="review-modal" class="fixed inset-0 bg-gamer-dark/90 backdrop-blur-sm z-[60] hidden flex items-center justify-center p-4">
+        <div class="bg-gamer-gray border border-gamer-cyan/30 rounded-2xl w-full max-w-md p-6 relative shadow-[0_0_30px_rgba(102,252,241,0.2)]">
+            <button onclick="document.getElementById('review-modal').classList.add('hidden')" class="absolute top-4 right-4 text-gamer-lightgray hover:text-white"><i class="fa-solid fa-xmark text-xl"></i></button>
+            
+            <h3 class="font-gaming text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-star text-yellow-400"></i> รีวิวผู้ขาย
+            </h3>
+            <p class="text-gamer-lightgray/70 text-xs mb-4">ให้คะแนนประสบการณ์การซื้อขายกับผู้ขายรายนี้ สำหรับสินค้า: <span id="review-product-name" class="font-bold text-white"></span></p>
+
+            <form id="review-form" onsubmit="submitSellerReview(event)" class="space-y-4">
+                <input type="hidden" id="review-seller-id">
+                <input type="hidden" id="review-consignment-id">
+
+                <div>
+                    <label class="block text-xs text-gamer-lightgray/70 font-bold mb-1">คะแนน (1-5)</label>
+                    <select id="review-rating" required class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-2 px-3 focus:outline-none focus:border-gamer-cyan">
+                        <option value="5">⭐⭐⭐⭐⭐ ยอดเยี่ยม</option>
+                        <option value="4">⭐⭐⭐⭐ ดีมาก</option>
+                        <option value="3">⭐⭐⭐ ปานกลาง</option>
+                        <option value="2">⭐⭐ พอใช้</option>
+                        <option value="1">⭐ แย่</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs text-gamer-lightgray/70 font-bold mb-1">ความคิดเห็นเพิ่มเติม</label>
+                    <textarea id="review-comment" rows="3" class="w-full bg-gamer-dark text-white border border-gamer-teal/30 rounded-xl py-2 px-3 focus:outline-none focus:border-gamer-cyan" placeholder="เล่าประสบการณ์ของคุณ..."></textarea>
+                </div>
+
+                <button type="submit" id="btn-submit-review" class="w-full bg-gamer-cyan text-gamer-dark font-bold py-2.5 rounded-xl hover:bg-white transition-all shadow-[0_0_15px_rgba(102,252,241,0.4)]">
+                    ส่งรีวิว
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="/theme.js"></script>
+<script src="/mobile-nav.js"></script>
+<script src="/audio.js"></script>
+</body>
+</html>
